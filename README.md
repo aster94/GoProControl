@@ -8,7 +8,11 @@ Also, this library has a cleaner interface and smarter code design to support no
 all the commands came from: https://github.com/KonradIT/goprowifihack
 
 Todo list:
+
 -use esp01 with AT-commands
+
 -improve the url-making
+
 -add more cameras
+
 -extend the library to non-gopro camera
