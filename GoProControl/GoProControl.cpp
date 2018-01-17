@@ -20,10 +20,10 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera){
 	_camera = camera;
 	
 	if (_camera == 1){			//HERO
-		//todo
+		//old not in the todo list
 	} else if (_camera == 2) {	//HERO2
-		//todo
-	} else if (_camera == 3) {	//HERO3
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 		
 		//URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
 		//example:	  http://10.5.5.9/camera/SH?t=password&p=%01
@@ -32,7 +32,7 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera){
 		_host = "10.5.5.9";
 		_port = 80;
 			
-		url = "GET http://" + _host + "/camera/";
+		url = "http://" + _host + "/camera/";
 		
 	} else if (_camera == 4) {	//HERO4
 		//todo
@@ -126,14 +126,14 @@ uint8_t GoProControl::sendRequest(String request) {
     return false;
   	}
 
-	client.print(request);
+	client.print("GET " + request + " HTTP/1.1\r\n");
 	client.print("Connection: close\r\n\r\n");
 
 	if (debugStatus){
 		Serial.println("my request is:");
 		Serial.println("-------------");
-	  	Serial.print(request);
-	  	Serial.print("Connection: close\r\n\r\n");
+		Serial.print("GET " + request + " HTTP/1.1\r\n");
+		Serial.print("Connection: close\r\n\r\n");
 		Serial.println("-------------\n");
 	}
   	if (listen() == "HTTP/1.1 200 OK\r") {
@@ -162,7 +162,7 @@ String GoProControl::listen(void) {
 				end_firstLine = true;
 			}
 		}
-  	}
+	}
 
 	if (debugStatus){
 	  Serial.println();
@@ -175,152 +175,480 @@ String GoProControl::listen(void) {
 
 
 ////////////////////////////////////////////////////////////////////////////
-///////////// 
+///////////// MAIN /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-
 
 uint8_t GoProControl::turnOn(void){
 	String requestURL;
-	requestURL = url + "PW?t=" + _pwd + "&p=%01 HTTP/1.1";
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "PW?t=" + _pwd + "&p=%01";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
 	return(sendRequest(requestURL));
 }
 
 uint8_t GoProControl::turnOff(void){
   	String requestURL;
-	requestURL = url + "PW?t=" + _pwd + "&p=%00 HTTP/1.1";
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "PW?t=" + _pwd + "&p=%00";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
 	return(sendRequest(requestURL));
 }
 
 uint8_t GoProControl::localizationOn(void){
-  String requestURL;
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "LL?t=" + pwd + "&p=\%01" + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "LL?t=" + pwd + "&p=\%01" + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+ 	String requestURL;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "LL?t=" + _pwd + "&p=%01";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+  	return(sendRequest(requestURL));
 }
 
 uint8_t GoProControl::localizationOff(void){
-  String requestURL;
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "LL?t=" + pwd + "&p=\%00" + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "LL?t=" + pwd + "&p=\%00" + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+	String requestURL;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "LL?t=" + _pwd + "&p=%00";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+  	return(sendRequest(requestURL));
 }
 
 uint8_t GoProControl::startCapture(void){
   	String requestURL;
-	requestURL = url + "SH?t=" + _pwd + "&p=%01 HTTP/1.1";
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "SH?t=" + _pwd + "&p=%01";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
 	return(sendRequest(requestURL));
 }
 
 uint8_t GoProControl::stopCapture(void){
   	String requestURL;
-	requestURL = url + "SH?t=" + _pwd + "&p=%00 HTTP/1.1";
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "SH?t=" + _pwd + "&p=%00";
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::deleteLast(void){
+  	String requestURL;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "DL?t=" + _pwd;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::deleteAll(void){
+  	String requestURL;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		requestURL = url + "DA?t=" + _pwd;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
   	return(sendRequest(requestURL));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////
-///////////// 
+///////////// SETTING	///////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t GoProControl::setTimeLapseInterval(float interval){
-  String requestURL;
-  String stringInterval;
 
-  if(interval == 0.5) stringInterval = "00";
-  else if(interval == 1) stringInterval = "01";
-  else if(interval == 5) stringInterval = "05";
-  else if(interval == 10) stringInterval = "0a";
-  else if(interval == 30) stringInterval = "0e";
-  else stringInterval = "0c";
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "TI?t=" + pwd + "&p=\%" + stringInterval + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "TI?t=" + pwd + "&p=\%" +stringInterval + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+uint8_t GoProControl::setCameraMode(uint8_t option){
+	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+
+		if(option == VIDEO_MODE) stringOption = "00";
+		else if (option == PHOTO_MODE) stringOption = "01";
+		else if (option == BURST_MODE) stringOption = "02";
+		else if (option == TIMELAPSE_MODE) stringOption = "03";
+		else if (option == TIMER_MODE) stringOption = "04";
+		else if (option == PLAY_HDMI) stringOption = "05";
+		requestURL = url + "CM?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
 }
 
-uint8_t GoProControl::setContinuousShot(int numberOfShots){
-  String requestURL;
-  String stringShots;
+uint8_t GoProControl::setCameraOrientation(uint8_t option){
+	String requestURL;
+	String stringOption;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if(option == ORIENTATION_UP) stringOption = "00";
+		else if (option == ORIENTATION_DOWN) stringOption = "01";
 
-  if(numberOfShots == 0) stringShots = "00";
-  else if(numberOfShots == 3) stringShots = "03";
-  else if(numberOfShots == 5) stringShots = "05";
-  else stringShots = "0a";
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "CS?t=" + pwd + "&p=\%" + stringShots + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "CS?t=" + pwd + "&p=\%" + stringShots + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+		requestURL = url + "UP?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
 }
 
-uint8_t GoProControl::setVideoMode(uint8_t mode){
-  String requestURL;
+uint8_t GoProControl::setVideoResolution(uint8_t option){
+	String requestURL;
+	String stringOption;
+	
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
-  if(mode == NTSC){
-	  
-	  //"00";
-  }
-  else if (mode == PAL) { 
-	  //"01";	
-  }
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "CS?t=" + pwd + "&p=\%" + videoMode + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "CS?t=" + pwd + "&p=\%" +videoMode + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+		if(option == VR_WVGA60) stringOption = "00";
+		else if (option == VR_WVGA120) stringOption = "01";
+		else if (option == VR_720_30) stringOption = "02";
+		else if (option == VR_720_60) stringOption = "03";
+		else if (option == VR_960_30) stringOption = "04";
+		else if (option == VR_960_48) stringOption = "05";
+		else if (option == VR_1080_30) stringOption = "06";
+
+		requestURL = url + "VR?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
 }
 
-uint8_t GoProControl::deleteLast(void){
-  String requestURL;
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "DL?t=" + pwd + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "DL?t=" + pwd + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+uint8_t GoProControl::setPhotoResolution(uint8_t option){
+	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if (option == PR_11mpW) stringOption = "00";
+		else if (option == PR_8mpW) stringOption = "01";
+		else if (option == PR_5mpW) stringOption = "02";
+
+		requestURL = url + "PR?t=" + _pwd + "&p=%" + stringOption;
+
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
 }
 
-uint8_t GoProControl::deleteAll(void){
-  String requestURL;
-/*
-  if(cameraOrBacpac == CAMERA){
-    requestURL = "GET " + cameraURL + "DA?t=" + pwd + " HTTP/1.1";
-  }
-  else{
-    requestURL = "GET " + bacpacURL + "DA?t=" + pwd + " HTTP/1.1";
-  }
-*/
-  return(sendRequest(requestURL));
+uint8_t	GoProControl::setFrameRate(uint8_t option){
+	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if(option == FPS12) stringOption = "00";
+		else if (option == FPS15) stringOption = "01";
+		else if (option == FPS12p5) stringOption = "0b";
+		else if (option == FPS24) stringOption = "02";
+		else if (option == FPS25) stringOption = "03";
+		else if (option == FPS30) stringOption = "04";
+		else if (option == FPS48) stringOption = "05";
+		else if (option == FPS50) stringOption = "06";
+		else if (option == FPS60) stringOption = "07";
+		else if (option == FPS100) stringOption = "08";
+		else if (option == FPS120) stringOption = "09";
+		else if (option == FPS240) stringOption = "0a";
+		requestURL = url + "FS?t=" + _pwd + "&p=%" + stringOption;
+
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::setFov(uint8_t option){
+	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if (option == WIDE_FOV) stringOption = "00";
+		else if (option == MEDIUM_FOV) stringOption = "01";
+		else if (option == NARROW_FOV) stringOption = "02";
+		requestURL = url + "FV?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::setVideoMode(uint8_t option){
+  	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+
+		if(option == NTSC) stringOption = "00";
+		else if (option == PAL) stringOption = "01";
+		requestURL = url + "VM?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::setTimeLapseInterval(float option){
+  	String requestURL;
+  	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if(option == 0.5) stringOption = "00";
+		else if(option == 1) stringOption = "01";
+		else if(option == 5) stringOption = "05";
+		else if(option == 10) stringOption = "0a";
+		else if(option == 30) stringOption = "1e";
+		else if(option == 60) stringOption = "3c";
+		requestURL = url + "TI?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+
+  	return(sendRequest(requestURL));
+}
+
+uint8_t GoProControl::setContinuousShot(uint8_t option){
+	String requestURL;
+	String stringOption;
+
+	if (_camera == 1){			//HERO
+		//old not in the todo list
+	} else if (_camera == 2) {	//HERO2
+		//old not in the todo list
+	} else if (_camera == 3 || _camera == 31 || _camera == 32 || _camera == 33) {	//HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+		
+		if (option == 0) stringOption = "00";
+		else if(option == 3) stringOption = "03";
+		else if(option == 5) stringOption = "05";
+		else if(option == 10) stringOption = "0a";
+		requestURL = url + "CS?t=" + _pwd + "&p=%" + stringOption;
+		
+	} else if (_camera == 4) {	//HERO4
+		//todo
+	} else if (_camera == 5) {	//HERO5
+		//todo
+	} else if (_camera == 6) {	//HERO6
+		//todo
+	} else if (_camera == 7) {	//next?
+		//future
+	}	
+	
+	return(sendRequest(requestURL));
 }
 
 ////////////////////////////////////////////////////////////////////////////
-///////////// end
+///////////// end /////////////////////
 ////////////////////////////////////////////////////////////////////////////
