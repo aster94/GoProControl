@@ -12,8 +12,10 @@
 
 #define HERO	1
 #define HERO2	2
-#define HERO3+	3
 #define HERO3	3
+#define HERO3P	31	//HERO3+
+#define HERO3B	32	//HERO3BLACK
+#define HERO3BP	33	//HERO3BLACK+
 #define HERO4	4
 #define HERO5	5
 #define HERO6	6
@@ -28,26 +30,26 @@
 #define NTSC 1
 #define PAL 0
 
-/*Video Modes*/
-#define videoMode 0
-#define photoMode 1
-#define burstMode 2
-#define timelapseMode 3
-#define timerMode 4
-#define playHDMI 5
+//Modes
+#define VIDEO_MODE 0
+#define PHOTO_MODE 1
+#define BURST_MODE 2
+#define TIMELAPSE_MODE 3
+#define TIMER_MODE 4
+#define PLAY_HDMI 5
 
 /*Orientation*/
-#define orientationUp 0
-#define orientationDown 1
+#define ORIENTATION_UP 0
+#define ORIENTATION_DOWN 1
 
 /*Resolutions*/
-#define VRWVGA60 0
-#define VRWVGA120 1
-#define VRR720_30 2
-#define VR720_60 3
-#define VR960_30 4
-#define VR960_48 5
-#define VR1080_30 6
+#define VR_WVGA60 0
+#define VR_WVGA120 1
+#define VR_720_30 2
+#define VR_720_60 3
+#define VR_960_30 4
+#define VR_960_48 5
+#define VR_1080_30 6
 
 /*Frame Rates*/
 #define FPS12 0
@@ -64,26 +66,16 @@
 #define FPS240 11
 
 /*FOV*/
-#define wideFOV 0
-#define mediumFOV 1
-#define narrowFOV 2
+#define WIDE_FOV 0
+#define MEDIUM_FOV 1
+#define NARROW_FOV 2
 
 /*Photo Resolutions*/
-#define photo11mpW 0
-#define photo8mpW 1
-#define photo5mpW 2
-#define photo5mpM 3
-#define photo12mpW 4
-#define photo7mpW 5
-#define photo7mpM 6
-
-
-typedef struct GoPro {
-   String  host;
-   uint16_t port;
-   String url;
-};
-
+#define PR_12mpW 0
+#define PR_11mpW 1
+#define PR_8mpW 2
+#define PR_7mpW 3
+#define PR_5mpW 4
 
 
 class GoProControl{
@@ -95,7 +87,6 @@ class GoProControl{
 	uint8_t enableDebug(uint8_t debug);	//return debugStatus
 	uint8_t GoProStatus();	//return GoProConnected and if the debug is enablad useful info
 
-	
     uint8_t turnOn(void);
     uint8_t turnOff(void);
 
@@ -105,10 +96,16 @@ class GoProControl{
     uint8_t localizationOn(void);
     uint8_t localizationOff(void);
 
-    uint8_t setTimeLapseInterval(float interval);
-    uint8_t setContinuousShot(int numberOfShots);
-	uint8_t setCameraMode(uint8_t mode);	//todo
-    uint8_t setVideoMode(uint8_t mode);
+	uint8_t setCameraMode(uint8_t option);
+	uint8_t	setCameraOrientation(uint8_t option);
+	uint8_t setVideoResolution(uint8_t option);
+	uint8_t setPhotoResolution(uint8_t option);
+	uint8_t	setFrameRate(uint8_t option);
+	uint8_t setFov(uint8_t option);
+	
+	uint8_t	setVideoMode(uint8_t option);
+    uint8_t setTimeLapseInterval(float option);
+    uint8_t setContinuousShot(uint8_t option);
 
     uint8_t deleteLast(void);
     uint8_t deleteAll(void);

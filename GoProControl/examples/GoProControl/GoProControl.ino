@@ -1,14 +1,12 @@
 #include <GoProControl.h>
-String GoProName = "your_camera_name";
-String GoProPassword = "your_camera_password";
+String GoProName = "your_gopro_name";
+String GoProPassword = "your_gopro_password";
 GoProControl gp(GoProName, GoProPassword, HERO3);
 
 uint8_t onStatus = true;
-bool captureStatus = false;
-byte in;
+char in = 0;
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
   gp.enableDebug(true);
   while (!Serial);
@@ -16,15 +14,16 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   if (Serial.available() > 0) {
     in = Serial.read();
     //Serial.write(in);
   }
 
   switch (in) {
-    default: break;
+    default:
+      break;
 
+    //connect
     case 'C':
       Serial.println("trying connection");
       if (!gp.GoProStatus()) {
@@ -34,6 +33,7 @@ void loop() {
       }
       break;
 
+    //turn on/off
     case 'T':
       if (gp.GoProStatus()) {
         Serial.print("turn ");
@@ -51,29 +51,71 @@ void loop() {
       } else {
         Serial.println("connect the camera first!");
       }
-
       break;
 
+    //start/stop capture
     case 'A':
       if (gp.GoProStatus()) {
-        Serial.print("capture ");
-
-        captureStatus = !captureStatus;
-        if (captureStatus) {
-          Serial.println("start");
-          if (gp.startCapture())
-            Serial.println("did");
-        } else {
-          Serial.println("stop");
-          if (gp.stopCapture())
-            Serial.println("did");
+        Serial.print("shoot");
+        if (gp.startCapture()) {
+          Serial.println("did");
         }
       } else {
         Serial.println("connect the camera first!");
       }
+      break;
 
+    case 'S':
+      Serial.println("stop");
+      if (gp.stopCapture())
+        break;
+
+    //set mode
+    case 'V':
+      gp.setCameraMode(VIDEO_MODE);
+      break;
+
+    case 'U':
+      gp.setCameraOrientation(ORIENTATION_UP);
+      break;
+
+    case 'W':
+      gp.setFov(MEDIUM_FOV);
+      break;
+
+    case 'E':
+      gp.setFrameRate(FPS120);
+      break;
+
+    case 'f':
+      gp.setPhotoResolution(PR_11mpW);
+      break;
+
+    case 'F':
+      gp.setVideoResolution(VR_1080_30);
+      break;
+
+    case 'L':
+      gp.setTimeLapseInterval(60);
+      break;
+
+    case 'O':
+      gp.localizationOn();
+      break;
+
+    case 'I':
+      gp.localizationOff();
+      break;
+
+    case 'd':
+      gp.deleteLast();
+      break;
+
+    case 'D':
+      gp.deleteAll();
       break;
   }
+
   in = 0;
   delay(100);
 }
