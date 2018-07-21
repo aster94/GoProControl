@@ -21,10 +21,15 @@
 #define HERO6	6
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-//#include <ESP8266AT.h>	//todo
 
-#define TIME_OUT_CONNECTION 10000
+#if defined (ARDUINO_ARCH_ESP8266)
+	#include "ESP8266WiFi.h"
+#else
+	#define ESP_AT
+	#include "WiFiEsp.h"
+#endif
+
+#define TIME_OUT_CONNECTION 5000
 
 //Screen
 #define NTSC 1
@@ -112,8 +117,11 @@ class GoProControl{
 
 	
   private:
-	
+#if defined (ESP_AT)
+	WiFiEspClient client;
+#else
 	WiFiClient client;
+#endif
 	String url;
 	
 	String _ssid;
