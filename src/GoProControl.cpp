@@ -34,7 +34,7 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera){
 			
 		url = "http://" + _host + "/camera/";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {	//HERO4 + 5 + 6:
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {	//HERO4 + 5 + 6:
 		//URL scheme: http://HOST/gp/gpControl/....
 		//Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION (eg: change mode to video http://10.5.5.9/gp/gpControl/command/mode?p=0)
 		//Settings: http://HOST/gp/gpControl/setting/SETTING/option (eg: change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
@@ -191,7 +191,7 @@ uint8_t GoProControl::turnOn(void){
 		
 		requestURL = url + "PW?t=" + _pwd + "&p=%01";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		//todo
 		//send Wake-On-LAN command
 	} else if (_camera == 7) {	//next?
@@ -212,9 +212,9 @@ uint8_t GoProControl::turnOff(void){
 		
 		requestURL = url + "PW?t=" + _pwd + "&p=%00";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 	
-		requestUrl = url + "command/system/sleep";
+		requestURL = url + "command/system/sleep";
 	
 	} else if (_camera == 7) {	//next?
 		//future
@@ -234,9 +234,9 @@ uint8_t GoProControl::localizationOn(void){
 		
 		requestURL = url + "LL?t=" + _pwd + "&p=%01";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 	
-		requestUrl = url + "command/system/locate?p=1";
+		requestURL = url + "command/system/locate?p=1";
 	
 	} else if (_camera == 7) {	//next?
 		//future
@@ -256,9 +256,9 @@ uint8_t GoProControl::localizationOff(void){
 		
 		requestURL = url + "LL?t=" + _pwd + "&p=%00";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 	
-		requestUrl = url + "command/system/locate?p=0";
+		requestURL = url + "command/system/locate?p=0";
 	
 	} else if (_camera == 7) {	//next?
 		//future
@@ -278,9 +278,9 @@ uint8_t GoProControl::startCapture(void){
 		
 		requestURL = url + "SH?t=" + _pwd + "&p=%01";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 	
-		requestUrl = url + "command/shutter?p=1";
+		requestURL = url + "command/shutter?p=1";
 	
 	} else if (_camera == 7) {	//next?
 		//future
@@ -300,8 +300,8 @@ uint8_t GoProControl::stopCapture(void){
 		
 		requestURL = url + "SH?t=" + _pwd + "&p=%00";
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
-		requestUrl = url + "command/shutter?p=0";
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
+		requestURL = url + "command/shutter?p=0";
 	} else if (_camera == 7) {	//next?
 		//future
 	}	
@@ -320,8 +320,8 @@ uint8_t GoProControl::deleteLast(void){
 		
 		requestURL = url + "DL?t=" + _pwd;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
-		requestUrl = url + "command/storage/delete/last";
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
+		requestURL = url + "command/storage/delete/last";
 	} else if (_camera == 7) {	//next?
 		//future
 	}	
@@ -340,8 +340,8 @@ uint8_t GoProControl::deleteAll(void){
 		
 		requestURL = url + "DA?t=" + _pwd;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
-		requestUrl = url + "command/command/storage/delete/all";
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
+		requestURL = url + "command/command/storage/delete/all";
 	} else if (_camera == 7) {	//next?
 		//future
 	}	
@@ -373,12 +373,12 @@ uint8_t GoProControl::setCameraMode(uint8_t option){
 		else if (option == PLAY_HDMI) stringOption = "05";
 		requestURL = url + "CM?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		//todo: add sub-modes
 		if(option == VIDEO_MODE) stringOption = "0";
 		else if (option == PHOTO_MODE) stringOption = "1";
 		else if (option == MULTISHOT_MODE) stringOption = "2";
-		requestURL = url + "command/mode?p=" + stringOption
+		requestURL = url + "command/mode?p=" + stringOption;
 		
 	} else if (_camera == 7) {	//next?
 		//future
@@ -402,11 +402,11 @@ uint8_t GoProControl::setCameraOrientation(uint8_t option){
 
 		requestURL = url + "UP?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if(option == ORIENTATION_UP) stringOption = "0";
 		else if (option == ORIENTATION_DOWN) stringOption = "1";
 		else if (option == ORIENTATION_AUTO) stringOption = "2";
-		requestUrl = url + "setting/52/" + stringOption;
+		requestURL = url + "setting/52/" + stringOption;
 		
 	} else if (_camera == 7) {	//next?
 		//future
@@ -435,9 +435,9 @@ uint8_t GoProControl::setVideoResolution(uint8_t option){
 
 		requestURL = url + "VR?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if (option == VR_4K) stringOption = "1";
-		else if (option == VR_2K) stringOption = "4"
+		else if (option == VR_2K) stringOption = "4";
 		else if (option == VR_2K_SuperView) stringOption = "5";
 		else if (option == VR_1440p) stringOption = "7";
 		else if (option == VR_1080p_SuperView) stringOption = "8";
@@ -471,7 +471,7 @@ uint8_t GoProControl::setPhotoResolution(uint8_t option){
 
 		requestURL = url + "PR?t=" + _pwd + "&p=%" + stringOption;
 
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if (option == PR_12MP_Wide) stringOption = "0";
 		else if (option == PR_12MP_Linear) stringOption = "10";
 		else if (option == PR_12MP_Medium) stringOption = "8";
@@ -479,7 +479,7 @@ uint8_t GoProControl::setPhotoResolution(uint8_t option){
 		else if (option == PR_7MP_Wide) stringOption = "1";
 		else if (option == PR_7MP_Medium) stringOption = "2";
 		else if (option == PR_5MP_Wide) stringOption = "3";
-		requestUrl = url + "setting/17/" + stringOption;
+		requestURL = url + "setting/17/" + stringOption;
 		
 	} else if (_camera == 7) {	//next?
 		//future
@@ -512,7 +512,7 @@ uint8_t	GoProControl::setFrameRate(uint8_t option){
 		else if (option == FPS240) stringOption = "0a";
 		requestURL = url + "FS?t=" + _pwd + "&p=%" + stringOption;
 
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if (option == FR_240) stringOption = "0";
 		else if (option == FR_120) stringOption = "1";
 		else if (option == FR_100) stringOption = "2";
@@ -523,7 +523,7 @@ uint8_t	GoProControl::setFrameRate(uint8_t option){
 		else if (option == FR_48) stringOption = "7";
 		else if (option == FR_30) stringOption = "8";
 		else if (option == FR_25) stringOption = "9";
-		requestUrl = url + "setting/3/" + stringOption;
+		requestURL = url + "setting/3/" + stringOption;
 	} else if (_camera == 7) {	//next?
 		//future
 	}	
@@ -546,13 +546,13 @@ uint8_t GoProControl::setFov(uint8_t option){
 		else if (option == NARROW_FOV) stringOption = "02";
 		requestURL = url + "FV?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if (option == WIDE_FOV) stringOption = "0";
 		else if (option == MEDIUM_FOV) stringOption = "1";
 		else if (option == NARROW_FOV) stringOption = "2";
 		else if (option == LINEAR_FOV) stringOption = "4";
 		
-		requestUrl = url + "setting/4/" + stringOption;
+		requestURL = url + "setting/4/" + stringOption;
 	} else if (_camera == 7) {	//next?
 		//future
 	}	
@@ -574,7 +574,7 @@ uint8_t GoProControl::setVideoMode(uint8_t option){
 		else if (option == PAL) stringOption = "01";
 		requestURL = url + "VM?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if(option == NTSC) stringOption = "0";
 		else if (option == PAL) stringOption = "1";
 		requestURL = url + "setting/57/" + stringOption;
@@ -603,7 +603,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option){
 		else if(option == 60) stringOption = "3c";
 		requestURL = url + "TI?t=" + _pwd + "&p=%" + stringOption;
 		
-	} else if (_camera == 4 || _camera = 5 || _camera = 6) {
+	} else if (_camera == 4 || _camera == 5 || _camera == 6) {
 		if(option == 0.5) stringOption = "0";
 		else if(option == 1) stringOption = "1";
 		else if(option == 2) stringOption = "1";
