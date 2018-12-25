@@ -24,6 +24,7 @@
 
 #if defined (ARDUINO_ARCH_ESP8266)
 	#include "ESP8266WiFi.h"
+	#include <ESP8266HTTPClient.h>
 #else
 	#define ESP_AT
 	#include "WiFiEsp.h"
@@ -161,6 +162,7 @@ class GoProControl{
 	WiFiEspClient client;
 #else
 	WiFiClient client;
+	HTTPClient http;
 #endif
 	String url;
 	
@@ -178,3 +180,4 @@ class GoProControl{
 };
 
 #endif	//GOPRO_CONTROL_H
+
