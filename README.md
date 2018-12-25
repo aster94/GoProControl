@@ -9,7 +9,12 @@ This is a library to interface with GoPro cameras, just press a button and turn 
 - any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using [this library](https://github.com/bportaluri/WiFiEsp)
 
 ## Supported cameras:
+
 - HERO3+
+- HERO4
+- HERO5 (tested with Black)
+- HERO7 Black
+- Fusion
 
 I made the library with a style which would be quite easy to add other cameras (not only gopro). I will be very happy to accept pull requests and have as collaborator other people
 
@@ -17,7 +22,12 @@ I made the library with a style which would be quite easy to add other cameras (
 
 Use the arduino library manager or download directly from github
 
-# Story
+## Example code
+
+Don't forget to change the SSID and Password on the example code! Also change camera type (HERO3, HERO4, HERO5, HERO6...)
+
+## Story
+
 Have you ever thought about the possibility to control your action camera with your Arduino? Well if you are here because you googled that here you may be interested in watching this video
 
 [![Alt text](https://img.youtube.com/vi/PuM-ZQ2tMW0/0.jpg)](https://www.youtube.com/watch?v=PuM-ZQ2tMW0)

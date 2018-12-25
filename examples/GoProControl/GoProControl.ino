@@ -74,6 +74,14 @@ void loop() {
     case 'V':
       gp.setCameraMode(VIDEO_MODE);
       break;
+      
+    case 'P':
+      gp.setCameraMode(PHOTO_MODE);
+      break;
+
+    case 'M':
+      gp.setCameraMode(MULTISHOT_MODE);
+      break;
 
     case 'U':
       gp.setCameraOrientation(ORIENTATION_UP);
