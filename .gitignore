@@ -5,3 +5,8 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 platformio.ini
+
+examples/GoProControl/Constants.h
+examples/MultiCam/Constants.h
+examples/*/Constants.h
+Constants.h
