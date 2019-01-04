@@ -1,16 +1,20 @@
 #include <GoProControl.h>
-String GoProName = "your_gopro_name";
-String GoProPassword = "your_gopro_password";
-GoProControl gp(GoProName, GoProPassword, HERO3);
+#include <WiFiUdp.h>
+#include "Constants.h"
+
+GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO7);
 
 uint8_t onStatus = true;
 char in = 0;
+byte macAddr[] = { 0x78, 0x0C, 0xB8, 0xAE, 0xAE, 0xB1 };
+WiFiUDP udp;
 
 void setup() {
   Serial.begin(115200);
   gp.enableDebug(true);
   while (!Serial);
   Serial.println("starting");
+  udp.begin(9);
 }
 
 void loop() {
@@ -40,7 +44,8 @@ void loop() {
 
         onStatus = !onStatus;
         if (onStatus) {
-          Serial.println("on");
+          Serial.println("on");          
+          gp.sendWoL(udp, macAddr, sizeof macAddr);
           if (gp.turnOn())
             Serial.println("did");
         } else {
@@ -73,6 +78,14 @@ void loop() {
     //set mode
     case 'V':
       gp.setCameraMode(VIDEO_MODE);
+      break;
+      
+    case 'P':
+      gp.setCameraMode(PHOTO_MODE);
+      break;
+
+    case 'M':
+      gp.setCameraMode(MULTISHOT_MODE);
       break;
 
     case 'U':
