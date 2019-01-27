@@ -2,7 +2,7 @@
 #include <WiFiUdp.h>
 #include "Constants.h"
 
-GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO7);
+GoProControl gp(GOPRO_SSID_3, GOPRO_PASS_3, HERO5);
 
 uint8_t onStatus = true;
 char in = 0;
@@ -44,7 +44,7 @@ void loop() {
 
         onStatus = !onStatus;
         if (onStatus) {
-          Serial.println("on");          
+          Serial.println("on");
           gp.sendWoL(udp, macAddr, sizeof macAddr);
           if (gp.turnOn())
             Serial.println("did");
@@ -79,7 +79,7 @@ void loop() {
     case 'V':
       gp.setCameraMode(VIDEO_MODE);
       break;
-      
+
     case 'P':
       gp.setCameraMode(PHOTO_MODE);
       break;
@@ -126,6 +126,10 @@ void loop() {
 
     case 'D':
       gp.deleteAll();
+      break;
+
+    case 'p':
+      gp.confirmPairing();
       break;
   }
 

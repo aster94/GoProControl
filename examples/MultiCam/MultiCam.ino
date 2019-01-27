@@ -18,23 +18,23 @@ void setup() {
   while (!Serial);
   Serial.println("starting");
   udp.begin(9);
-  
-  
+
+
 }
 
 void loop() {
   // Shoot
-  	    Hero_Seven.begin();
-            delay(4000);
-       if(!Hero_Seven.startCapture()){
-        Hero_Seven.begin();
-       }
-     delay(4000);
-       Hero_Four.begin();
-delay(4000);
-        Hero_Four.startCapture();
-      
-	delay(4000);
-	
-	
+  Hero_Seven.begin();
+  delay(4000);
+  if (!Hero_Seven.startCapture()) {
+    Hero_Seven.begin();
+  }
+  delay(4000);
+  Hero_Four.begin();
+  delay(4000);
+  Hero_Four.startCapture();
+
+  delay(4000);
+
+
 }
