@@ -1,9 +1,13 @@
 # GoPro Control Arduino
-This is a library to interface with GoPro cameras, just press a button and turn on your GoPro action camera using an Arduino!
+
+This is a library to interface with GoPro cameras over WiFi, just press a button and turn on your GoPro action camera using an Arduino!
 
 ![gopro and arduino](https://image.ibb.co/cGRb4p/1.jpg)
 
+![gopro and arduino](https://i.imgur.com/ILdYBRm.jpg)
+
 ## Supported boards:
+
 - ESP8266
 - ESP32
 - any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using [this library](https://github.com/bportaluri/WiFiEsp)
@@ -13,6 +17,7 @@ This is a library to interface with GoPro cameras, just press a button and turn 
 - HERO3+
 - HERO4
 - HERO5 (tested with Black)
+- HERO6 Black
 - HERO7 Black
 - Fusion
 
@@ -20,11 +25,21 @@ I made the library with a style which would be quite easy to add other cameras (
 
 ## Installation
 
-Use the arduino library manager or download directly from github
+- Using Arduino IDE:
+	- Go to Tools > Manage libraries 
+	- Search for GoProControl
+- Using PlatformIO for Visual Studio Code:
+	- ````pio lib install "GoProControl"````
+- Manually:
+	- ````cd $HOME/Arduino/libraries```` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
+	- ````git clone https://github.com/aster94/GoProControl.git````
+	- Restart Arduino IDE
 
-## Example code
+## Examples:
 
-Don't forget to change the SSID and Password on the example code! Also change camera type (HERO3, HERO4, HERO5, HERO6...)
+**Important!**
+
+Don't forget to change the SSID and Password on the example code! To do so, edit the Constants.h file (Constants.h.example should be renamed to Constants.h) in the example folder. Also change camera type (HERO3, HERO4, HERO5, HERO6...)
 
 ## Story
 
