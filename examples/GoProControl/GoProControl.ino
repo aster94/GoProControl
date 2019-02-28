@@ -2,7 +2,7 @@
 #include <WiFiUdp.h>
 #include "Constants.h"
 
-GoProControl gp(GOPRO_SSID_3, GOPRO_PASS_3, HERO5);
+GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO5);
 
 uint8_t onStatus = true;
 char in = 0;

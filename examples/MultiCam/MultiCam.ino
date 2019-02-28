@@ -4,7 +4,7 @@
 
 GoProControl Hero_Seven(GOPRO_SSID, GOPRO_PASS, HERO6);
 
-GoProControl Hero_Four(GOPRO_SSID_2, GOPRO_PASS_2, HERO4);
+GoProControl Hero_Four(GOPRO_2_SSID, GOPRO_2_PASS, HERO4);
 
 uint8_t onStatus = true;
 char in = 0;
