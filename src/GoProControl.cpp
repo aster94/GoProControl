@@ -122,22 +122,18 @@ uint8_t GoProControl::sendRequest(String request) {
     return false;
   	}
 
-	client.print("GET " + request + " HTTP/1.1\r\n");
-	client.print("Connection: close\r\n\r\n");
-
-	if (debugStatus){
-		Serial.println("my request is:");
-		Serial.println("-------------");
-		Serial.print("GET " + request + " HTTP/1.1\r\n");
-		Serial.print("Connection: close\r\n\r\n");
-		Serial.println("-------------\n");
+	http.begin(request);  
+    int httpCode = http.GET();
+    if (httpCode > 0) {
+      String payload = http.getString();   
+      Serial.println(payload);   
+	  return true;              
+    }
+	else{
+		return false;
 	}
-  	if (listen() == "HTTP/1.1 200 OK\r") {
-    	return true;
-  	}
-  	else {
-    	return false;
-  	}
+	
+http.end(); 
 }
 
 String GoProControl::listen(void) {

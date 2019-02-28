@@ -2,11 +2,13 @@
 #include <WiFiUdp.h>
 #include "Constants.h"
 
-GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO5);
+GoProControl gp(GOPRO_SSID, GOPRO_PASS_3, HERO7);
 
 uint8_t onStatus = true;
 char in = 0;
-byte macAddr[] = { 0x78, 0x0C, 0xB8, 0xAE, 0xAE, 0xB1 };
+//byte macAddr[] = { 0x78, 0x0C, 0xB8, 0xAE, 0xAE, 0xB1 };
+byte macAddr[] = { 0x06, 0x41, 0x69, 0x91, 0x08, 0xBA };
+
 WiFiUDP udp;
 
 void setup() {
