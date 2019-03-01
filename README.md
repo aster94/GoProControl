@@ -10,7 +10,7 @@ This is a library to interface with GoPro cameras over WiFi, just press a button
 
 - ESP8266
 - ESP32
-- any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using [this library](https://github.com/bportaluri/WiFiEsp)
+- ~~any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using [this library](https://github.com/bportaluri/WiFiEsp)~~
 
 ## Supported cameras:
 
