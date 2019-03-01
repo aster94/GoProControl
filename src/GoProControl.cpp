@@ -51,6 +51,7 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
 
 uint8_t GoProControl::begin()
 {
+	// no support for camera before HERO3
 	if (_camera <= 2)
 	{
 		if (_debug)
@@ -134,7 +135,6 @@ uint8_t GoProControl::confirmPairing()
 {
 	if (_camera == 3)
 	{
-
 		_request = _url + "DL?t=" + _pwd;
 	}
 	else if (_camera >= 4)
@@ -209,7 +209,6 @@ uint8_t GoProControl::startCapture()
 {
 	if (_camera == 3)
 	{
-
 		_request = _url + "SH?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= 4)
@@ -225,7 +224,6 @@ uint8_t GoProControl::stopCapture()
 {
 	if (_camera == 3)
 	{
-
 		_request = _url + "SH?t=" + _pwd + "&p=%00";
 	}
 	else if (_camera >= 4)
@@ -240,7 +238,6 @@ uint8_t GoProControl::localizationOn()
 {
 	if (_camera == 3)
 	{
-
 		_request = _url + "LL?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= 4)
@@ -616,6 +613,10 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 {
 	if (option != 0.5 || option != 1 || option != 5 || option != 10 || option != 30 || option != 60)
 	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setTimeLapseInterval");
+		}
 		return -1;
 	}
 
@@ -661,6 +662,10 @@ uint8_t GoProControl::setContinuousShot(uint8_t option)
 {
 	if (option != 0 || option != 3 || option != 5 || option != 10)
 	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setContinuousShot");
+		}
 		return -1;
 	}
 
