@@ -17,104 +17,127 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define HERO 1
-#define HERO2 2
-#define HERO3 3
-#define HERO4 4
-#define HERO5 5
-#define HERO6 6
-#define HERO7 7
-
 #define TIME_OUT_CONNECTION 5000
 
-//Screen
-#define NTSC 1
-#define PAL 0
+enum camera
+{
+    HERO = 1,
+    HERO2,
+    HERO3,
+    HERO4,
+    HERO5,
+    HERO6,
+    HERO7
+};
 
-//Modes
-#define VIDEO_MODE 0
-#define PHOTO_MODE 1
-#define BURST_MODE 2
-#define TIMELAPSE_MODE 3
-#define TIMER_MODE 4
-#define PLAY_HDMI 5
+enum mode
+{
+    mode_first = 0,
+    VIDEO_MODE,
+    PHOTO_MODE,
+    BURST_MODE,
+    TIMELAPSE_MODE,
+    TIMER_MODE,
+    PLAY_HDMI,
+    MULTISHOT_MODE, //Hero4/5/6 modes:
+    mode_last
+};
 
-//Hero4/5/6 modes:
-#define MULTISHOT_MODE 2
+enum orientation
+{
+    orientation_first = mode_last + 1,
+    ORIENTATION_UP,
+    ORIENTATION_DOWN,
+    ORIENTATION_AUTO, // Hero4/5/6
+    orientation_last
+};
 
-/*Orientation*/
-#define ORIENTATION_UP 0
-#define ORIENTATION_DOWN 1
-#define ORIENTATION_AUTO 2 /*Hero4/5/6*/
+enum video_resolution
+{
+    video_resolution_first = orientation_last + 1,
+    VR_WVGA60,
+    VR_WVGA120,
+    VR_720_30,
+    VR_720_60,
+    VR_960_30,
+    VR_960_48,
+    VR_1080_30,
+    //Resolutions Hero4/5/6
+    VR_4K,
+    VR_2K,
+    VR_2K_SuperView,
+    VR_1440p,
+    VR_1080p_SuperView,
+    VR_1080p,
+    VR_960p,
+    VR_720p_SuperView,
+    VR_720p,
+    VR_WVGA,
+    video_resolution_last
+};
 
-/*Resolutions*/
-#define VR_WVGA60 0
-#define VR_WVGA120 1
-#define VR_720_30 2
-#define VR_720_60 3
-#define VR_960_30 4
-#define VR_960_48 5
-#define VR_1080_30 6
+enum photo_resolution
+{
+    photo_resolution_first = video_resolution_last + 1,
+    PR_12mpW,
+    PR_11mpW,
+    PR_8mpW,
+    PR_7mpW,
+    PR_5mpW,
+    //Photo Resolution Hero 4/5/6
+    PR_12MP_Wide,
+    PR_12MP_Linear,
+    PR_12MP_Medium,
+    PR_12MP_Narrow,
+    PR_7MP_Wide,
+    PR_7MP_Medium,
+    PR_5MP_Wide,
+    photo_resolution_last
+};
 
-/*Resolutions Hero4/5/6*/
+enum frame_rate
+{
+    frame_rate_first = photo_resolution_last + 1,
+    FPS12,
+    FPS15,
+    FPS12p5,
+    FPS24,
+    FPS25,
+    FPS30,
+    FPS48,
+    FPS50,
+    FPS60,
+    FPS100,
+    FPS120,
+    FPS240,
+    // Frame rates Hero4/5/6
+    FR_240,
+    FR_120,
+    FR_100,
+    FR_90,
+    FR_80,
+    FR_60,
+    FR_50,
+    FR_48,
+    FR_30,
+    FR_25,
+    frame_rate_last
+};
 
-#define VR_4K 1
-#define VR_2K 4
-#define VR_2K_SuperView 5
-#define VR_1440p 7
-#define VR_1080p_SuperView 8
-#define VR_1080p 9
-#define VR_960p 10
-#define VR_720p_SuperView 11
-#define VR_720p 12
-#define VR_WVGA 13
+enum fov
+{
+    fov_first = frame_rate_last + 1,
+    WIDE_FOV,
+    MEDIUM_FOV,
+    NARROW_FOV,
+    LINEAR_FOV, // Hero4/5/6
+    fov_last
+};
 
-/*Frame Rates*/
-#define FPS12 0
-#define FPS15 1
-#define FPS12p5 2
-#define FPS24 3
-#define FPS25 4
-#define FPS30 5
-#define FPS48 6
-#define FPS50 7
-#define FPS60 8
-#define FPS100 9
-#define FPS120 10
-#define FPS240 11
-
-/* Frame rates Hero4/5/6*/
-
-#define FR_240 0
-#define FR_120 1
-#define FR_100 2
-#define FR_90 3
-#define FR_80 4
-#define FR_60 5
-#define FR_50 6
-#define FR_48 7
-#define FR_30 8
-#define FR_25 9
-
-/*FOV*/
-#define WIDE_FOV 0
-#define MEDIUM_FOV 1
-#define NARROW_FOV 2
-#define LINEAR_FOV 4 /* Hero4/5/6 */
-
-/*Photo Resolutions*/
-#define PR_12mpW 0
-#define PR_11mpW 1
-#define PR_8mpW 2
-#define PR_7mpW 3
-#define PR_5mpW 4
-
-/* Photo Resolution Hero 4/5/6 */
-
-#define PR_12MP_Wide 0
-#define PR_12MP_Linear 10
-#define PR_12MP_Medium 8
-#define PR_12MP_Narrow 9
-#define PR_7MP_Wide 1
-#define PR_7MP_Medium 2
-#define PR_5MP_Wide 3
+enum video_encoding
+{
+    video_encoding_first = fov_last + 1,
+    NTSC,
+    PAL,
+    video_encoding_last
+};

@@ -245,7 +245,6 @@ uint8_t GoProControl::localizationOn()
 	}
 	else if (_camera >= 4)
 	{
-
 		_request = _url + "command/system/locate?p=1";
 	}
 
@@ -300,6 +299,15 @@ uint8_t GoProControl::deleteAll()
 
 uint8_t GoProControl::setMode(uint8_t option)
 {
+	if (!validMode(option, mode_first, mode_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setMode");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == VIDEO_MODE)
@@ -333,6 +341,15 @@ uint8_t GoProControl::setMode(uint8_t option)
 
 uint8_t GoProControl::setOrientation(uint8_t option)
 {
+	if (!validMode(option, orientation_first, orientation_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setOrientation");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == ORIENTATION_UP)
@@ -358,6 +375,15 @@ uint8_t GoProControl::setOrientation(uint8_t option)
 
 uint8_t GoProControl::setVideoResolution(uint8_t option)
 {
+	if (!validMode(option, video_resolution_first, video_resolution_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setVideoResolution");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == VR_WVGA60)
@@ -408,6 +434,15 @@ uint8_t GoProControl::setVideoResolution(uint8_t option)
 
 uint8_t GoProControl::setPhotoResolution(uint8_t option)
 {
+	if (!validMode(option, photo_resolution_first, photo_resolution_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setPhotoResolution");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == PR_11mpW)
@@ -443,6 +478,15 @@ uint8_t GoProControl::setPhotoResolution(uint8_t option)
 
 uint8_t GoProControl::setFrameRate(uint8_t option)
 {
+	if (!validMode(option, frame_rate_first, frame_rate_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setFrameRate");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == FPS12)
@@ -501,6 +545,15 @@ uint8_t GoProControl::setFrameRate(uint8_t option)
 
 uint8_t GoProControl::setFov(uint8_t option)
 {
+	if (!validMode(option, fov_first, fov_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setFov");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == WIDE_FOV)
@@ -528,8 +581,17 @@ uint8_t GoProControl::setFov(uint8_t option)
 	return sendRequest(_request);
 }
 
-uint8_t GoProControl::setVideoMode(uint8_t option)
+uint8_t GoProControl::setVideoEncoding(uint8_t option)
 {
+	if (!validMode(option, video_encoding_first, video_encoding_last))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Wrong parameter for setVideoEncoding");
+		}
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == NTSC)
@@ -552,6 +614,11 @@ uint8_t GoProControl::setVideoMode(uint8_t option)
 
 uint8_t GoProControl::setTimeLapseInterval(float option)
 {
+	if (option != 0.5 || option != 1 || option != 5 || option != 10 || option != 30 || option != 60)
+	{
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == 0.5)
@@ -592,6 +659,11 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 
 uint8_t GoProControl::setContinuousShot(uint8_t option)
 {
+	if (option != 0 || option != 3 || option != 5 || option != 10)
+	{
+		return -1;
+	}
+
 	if (_camera == 3)
 	{
 		if (option == 0)
@@ -677,4 +749,14 @@ String GoProControl::listen()
 		_debug_port->println();
 	}
 	return firstLine;
+}
+
+uint8_t GoProControl::validMode(int16_t mode, int16_t first, int16_t last)
+{
+	for (int16_t i = first; i <= last; i++)
+	{
+		if (mode == i)
+			return true;
+	}
+	return false;
 }

@@ -63,7 +63,7 @@ class GoProControl
 	uint8_t setPhotoResolution(uint8_t option);
 	uint8_t setFrameRate(uint8_t option);
 	uint8_t setFov(uint8_t option);
-	uint8_t setVideoMode(uint8_t option);
+	uint8_t setVideoEncoding(uint8_t option);
 	uint8_t setTimeLapseInterval(float option);
 	uint8_t setContinuousShot(uint8_t option);
 
@@ -89,6 +89,7 @@ class GoProControl
 
 	uint8_t sendRequest(String request);
 	String listen();
+	uint8_t validMode(int16_t mode, int16_t first, int16_t last);
 };
 
 #endif //GOPRO_CONTROL_H
