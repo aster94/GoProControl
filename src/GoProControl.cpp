@@ -55,7 +55,7 @@ uint8_t GoProControl::begin()
 	{
 		if (_debug)
 		{
-			_debug_port->println(F("Camera not supported"));
+			_debug_port->println("Camera not supported");
 		}
 		return -1;
 	}
@@ -624,8 +624,8 @@ uint8_t GoProControl::sendRequest(String request)
 		if (_debug)
 		{
 			_debug_port->println("Connection lost");
-			_GoProConnected = false;
 		}
+		_GoProConnected = false;
 		return false;
 	}
 
