@@ -1,8 +1,7 @@
 #include <GoProControl.h>
-#include <WiFiUdp.h>
 #include "Constants.h"
 
-GoProControl gp(GOPRO_SSID, GOPRO_PASS_3, HERO7);
+GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO7);
 
 uint8_t onStatus = true;
 char in = 0;
@@ -14,7 +13,7 @@ WiFiUDP udp;
 void setup()
 {
   Serial.begin(115200);
-  gp.enableDebug(true);
+  gp.enableDebug(&Serial);
   while (!Serial)
     ;
   Serial.println("starting");
@@ -37,7 +36,7 @@ void loop()
   //connect
   case 'C':
     Serial.println("trying connection");
-    if (!gp.GoProStatus())
+    if (!gp.getGoProStatus())
     {
       gp.begin();
     }
@@ -49,7 +48,7 @@ void loop()
 
   //turn on/off
   case 'T':
-    if (gp.GoProStatus())
+    if (gp.getGoProStatus())
     {
       Serial.print("turn ");
 
@@ -76,7 +75,7 @@ void loop()
 
   //start/stop capture
   case 'A':
-    if (gp.GoProStatus())
+    if (gp.getGoProStatus())
     {
       Serial.print("shoot");
       if (gp.startCapture())
@@ -97,19 +96,19 @@ void loop()
 
   //set mode
   case 'V':
-    gp.setCameraMode(VIDEO_MODE);
+    gp.setMode(VIDEO_MODE);
     break;
 
   case 'P':
-    gp.setCameraMode(PHOTO_MODE);
+    gp.setMode(PHOTO_MODE);
     break;
 
   case 'M':
-    gp.setCameraMode(MULTISHOT_MODE);
+    gp.setMode(MULTISHOT_MODE);
     break;
 
   case 'U':
-    gp.setCameraOrientation(ORIENTATION_UP);
+    gp.setOrientation(ORIENTATION_UP);
     break;
 
   case 'W':
