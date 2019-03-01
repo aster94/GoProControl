@@ -2,9 +2,9 @@
 
 This is a library to interface with GoPro cameras over WiFi, just press a button and turn on your GoPro action camera using an Arduino!
 
-![gopro and arduino](https://image.ibb.co/cGRb4p/1.jpg)
+![Alt text](/extras/gopro3_and_nodemcu.jpg?raw=true "GoPro3")
 
-![gopro and arduino](https://i.imgur.com/ILdYBRm.jpg)
+![Alt text](/extras/gopros_and_esps.jpg?raw=true "GoPro4")
 
 ## Supported boards:
 
@@ -83,6 +83,6 @@ In the video I take a picture, change the mode from photo to video, start and st
 
 ## Reference
 
-all the commands came from: https://github.com/KonradIT/goprowifihack
+All the commands came from: https://github.com/KonradIT/goprowifihack
 
 The idea cames from another gopro library: https://github.com/agdl/GoPRO which works only on arduino WiFi boards and only with gopro HERO3.
