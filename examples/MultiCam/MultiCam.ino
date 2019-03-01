@@ -1,9 +1,7 @@
 #include <GoProControl.h>
-#include <WiFiUdp.h>
 #include "Constants.h"
 
 GoProControl Hero_Seven(GOPRO_SSID, GOPRO_PASS, HERO6);
-
 GoProControl Hero_Four(GOPRO_2_SSID, GOPRO_2_PASS, HERO4);
 
 uint8_t onStatus = true;
@@ -13,9 +11,8 @@ WiFiUDP udp;
 
 void setup()
 {
-  Serial.begin(115200);
-  Hero_Seven.enableDebug(true);
-  Hero_Four.enableDebug(true);
+  Hero_Seven.enableDebug(&Serial);
+  Hero_Four.enableDebug(&Serial);
   while (!Serial)
     ;
   Serial.println("starting");
