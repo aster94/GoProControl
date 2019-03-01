@@ -21,36 +21,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
 {
-
 	_ssid = ssid;
 	_pwd = pwd;
 	_camera = camera;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		//URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
-		//example:	  http://10.5.5.9/camera/SH?t=password&p=%01
-		//here we cheate until param1
+	if (_camera == 3) // HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+	{
+		// URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
+		// example:	  http://10.5.5.9/camera/SH?t=password&p=%01
+		// here we cheate until param1
 
 		_host = "10.5.5.9";
 		_port = 80;
 
 		url = "http://" + _host + "/camera/";
 	}
-	else if (_camera >= 4)
-	{ //HERO4 + 5 + 6:
-		//URL scheme: http://HOST/gp/gpControl/....
-		//Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION (eg: change mode to video http://10.5.5.9/gp/gpControl/command/mode?p=0)
-		//Settings: http://HOST/gp/gpControl/setting/SETTING/option (eg: change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
+	else if (_camera >= 4) // HERO4, 5, 6, 7:
+	{
+		// URL scheme: http://HOST/gp/gpControl/....
+		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION (eg: change mode to video http://10.5.5.9/gp/gpControl/command/mode?p=0)
+		// Settings: http://HOST/gp/gpControl/setting/SETTING/option (eg: change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
 
 		_host = "10.5.5.9";
 		_port = 80;
@@ -66,7 +56,6 @@ uint8_t GoProControl::enableDebug(uint8_t debug)
 
 uint8_t GoProControl::GoProStatus()
 {
-
 	if (debugStatus)
 	{
 		Serial.print("\nSSID: ");
@@ -82,8 +71,7 @@ uint8_t GoProControl::GoProStatus()
 
 uint8_t GoProControl::begin()
 {
-
-	//first of all check if you are usign a wifi board/module
+	// first of all check if you are usign a wifi board/module
 	if (WiFi.status() == WL_NO_SHIELD)
 	{
 		if (debugStatus)
@@ -226,15 +214,7 @@ uint8_t GoProControl::turnOn(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "PW?t=" + _pwd + "&p=%01";
@@ -252,15 +232,7 @@ uint8_t GoProControl::turnOff(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "PW?t=" + _pwd + "&p=%00";
@@ -278,15 +250,7 @@ uint8_t GoProControl::localizationOn(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "LL?t=" + _pwd + "&p=%01";
@@ -304,15 +268,7 @@ uint8_t GoProControl::localizationOff(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "LL?t=" + _pwd + "&p=%00";
@@ -330,15 +286,7 @@ uint8_t GoProControl::startCapture(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "SH?t=" + _pwd + "&p=%01";
@@ -356,15 +304,7 @@ uint8_t GoProControl::stopCapture(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "SH?t=" + _pwd + "&p=%00";
@@ -381,15 +321,7 @@ uint8_t GoProControl::deleteLast(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "DL?t=" + _pwd;
@@ -406,15 +338,7 @@ uint8_t GoProControl::confirmPairing(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "DL?t=" + _pwd;
@@ -431,15 +355,7 @@ uint8_t GoProControl::deleteAll(void)
 {
 	String requestURL;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		requestURL = url + "DA?t=" + _pwd;
@@ -463,15 +379,7 @@ uint8_t GoProControl::setCameraMode(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == VIDEO_MODE)
@@ -508,15 +416,7 @@ uint8_t GoProControl::setCameraOrientation(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == ORIENTATION_UP)
@@ -545,15 +445,7 @@ uint8_t GoProControl::setVideoResolution(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == VR_WVGA60)
@@ -607,15 +499,7 @@ uint8_t GoProControl::setPhotoResolution(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == PR_11mpW)
@@ -654,15 +538,7 @@ uint8_t GoProControl::setFrameRate(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == FPS12)
@@ -724,15 +600,7 @@ uint8_t GoProControl::setFov(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == WIDE_FOV)
@@ -765,15 +633,7 @@ uint8_t GoProControl::setVideoMode(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == NTSC)
@@ -799,15 +659,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == 0.5)
@@ -851,15 +703,7 @@ uint8_t GoProControl::setContinuousShot(uint8_t option)
 	String requestURL;
 	String stringOption;
 
-	if (_camera == 1)
-	{ //HERO
-		//old not in the todo list
-	}
-	else if (_camera == 2)
-	{ //HERO2
-		//old not in the todo list
-	}
-	else if (_camera == 3)
+	if (_camera == 3)
 	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 
 		if (option == 0)
@@ -871,8 +715,12 @@ uint8_t GoProControl::setContinuousShot(uint8_t option)
 		else if (option == 10)
 			stringOption = "0a";
 		requestURL = url + "CS?t=" + _pwd + "&p=%" + stringOption;
-
-	} /* Not supported in Hero4/5/6 */
+	}
+	else if (_camera >= 4)
+	{
+		// Not supported in Hero4/5/6/7
+		return false;
+	}
 
 	return (sendRequest(requestURL));
 }
