@@ -34,54 +34,61 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 class GoProControl
 {
-public:
+  public:
 	GoProControl(String ssid, String pwd, uint8_t camera);
 	uint8_t begin();
-	uint8_t enableDebug(uint8_t debug); //return debugStatus
-	uint8_t GoProStatus();							//return GoProConnected and if the debug is enablad useful info
+	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
+	uint8_t confirmPairing();
 
-	uint8_t turnOn(void);
-	uint8_t turnOff(void);
+	void enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate = 115200);
+	void disableDebug();
+	uint8_t getGoProStatus();
+	void printGoProStatus();
 
-	uint8_t startCapture(void);
-	uint8_t stopCapture(void);
+	uint8_t turnOn();
+	uint8_t turnOff();
 
-	uint8_t localizationOn(void);
-	uint8_t localizationOff(void);
+	uint8_t startCapture();
+	uint8_t stopCapture();
 
-	uint8_t setCameraMode(uint8_t option);
-	uint8_t setCameraOrientation(uint8_t option);
+	uint8_t localizationOn();
+	uint8_t localizationOff();
+
+	uint8_t deleteLast();
+	uint8_t deleteAll();
+
+	uint8_t setMode(uint8_t option);
+	uint8_t setOrientation(uint8_t option);
 	uint8_t setVideoResolution(uint8_t option);
 	uint8_t setPhotoResolution(uint8_t option);
 	uint8_t setFrameRate(uint8_t option);
 	uint8_t setFov(uint8_t option);
-
 	uint8_t setVideoMode(uint8_t option);
 	uint8_t setTimeLapseInterval(float option);
 	uint8_t setContinuousShot(uint8_t option);
 
-	uint8_t deleteLast(void);
-	uint8_t deleteAll(void);
-	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
-	uint8_t confirmPairing(void);
+  private:
+	WiFiClient _client;
+	HTTPClient _http;
 
-private:
-	WiFiClient client;
-	HTTPClient http;
-
-	String url;
-
+	String _url;
 	String _ssid;
 	String _pwd;
+
 	uint8_t _camera;
 	String _host;
 	uint16_t _port;
 
-	uint8_t GoProConnected = false;
-	uint8_t debugStatus;
+	String _request;
+	String _option;
 
-	uint8_t sendRequest(String thisRequest);
-	String listen(void);
+	uint8_t _GoProConnected = false;
+
+	HardwareSerial *_debug_port;
+	uint8_t _debug;
+
+	uint8_t sendRequest(String request);
+	String listen();
 };
 
 #endif //GOPRO_CONTROL_H

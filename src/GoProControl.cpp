@@ -29,58 +29,47 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
 	{
 		// URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
 		// example:	  http://10.5.5.9/camera/SH?t=password&p=%01
-		// here we cheate until param1
 
 		_host = "10.5.5.9";
 		_port = 80;
 
-		url = "http://" + _host + "/camera/";
+		_url = "http://" + _host + "/camera/";
 	}
 	else if (_camera >= 4) // HERO4, 5, 6, 7:
 	{
 		// URL scheme: http://HOST/gp/gpControl/....
-		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION (eg: change mode to video http://10.5.5.9/gp/gpControl/command/mode?p=0)
-		// Settings: http://HOST/gp/gpControl/setting/SETTING/option (eg: change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
+		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION
+		// example change mode to video: http://10.5.5.9/gp/gpControl/command/mode?p=0
+		// Settings: http://HOST/gp/gpControl/setting/SETTING/option
+		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
 
 		_host = "10.5.5.9";
 		_port = 80;
-		url = "http://" + _host + "/gp/gpControl/";
+		_url = "http://" + _host + "/gp/gpControl/";
 	}
-}
-
-uint8_t GoProControl::enableDebug(uint8_t debug)
-{
-	debugStatus = debug;
-	return debugStatus;
-}
-
-uint8_t GoProControl::GoProStatus()
-{
-	if (debugStatus)
-	{
-		Serial.print("\nSSID: ");
-		Serial.println(WiFi.SSID());
-		Serial.print("IP Address: ");
-		Serial.println(WiFi.localIP());
-		Serial.print("signal strength (RSSI):");
-		Serial.print(WiFi.RSSI());
-		Serial.println(" dBm\n");
-	}
-	return GoProConnected;
 }
 
 uint8_t GoProControl::begin()
 {
+	if (_camera <= 2)
+	{
+		if (_debug)
+		{
+			_debug_port->println(F("Camera not supported"));
+		}
+		return -1;
+	}
+
 	// first of all check if you are usign a wifi board/module
 	if (WiFi.status() == WL_NO_SHIELD)
 	{
-		if (debugStatus)
+		if (_debug)
 		{
-			Serial.println("WiFi board/module not detected");
+			_debug_port->println("WiFi board/module not detected");
 		}
 
-		GoProConnected = false;
-		return false;
+		_GoProConnected = false;
+		return -2;
 	}
 
 	char ssid_c[_ssid.length()];
@@ -95,103 +84,34 @@ uint8_t GoProControl::begin()
 
 	while (millis() - timeStart < TIME_OUT_CONNECTION)
 	{
-		if (debugStatus)
+		if (_debug)
 		{
-			Serial.print("Attempting to connect to SSID: ");
-			Serial.println(_ssid);
-			Serial.print("using password: ");
-			Serial.println(_pwd);
+			_debug_port->print("Attempting to connect to SSID: ");
+			_debug_port->println(_ssid);
+			_debug_port->print("using password: ");
+			_debug_port->println(_pwd);
 		}
 		delay(1500);
 
 		if (WiFi.status() == WL_CONNECTED)
 		{
-			if (debugStatus)
+			if (_debug)
 			{
-				Serial.print("Connected");
+				_debug_port->print("Connected");
 			}
-
-			GoProConnected = true;
+			_GoProConnected = true;
 			return true;
 		}
 	}
-	if (debugStatus)
+
+	if (_debug)
 	{
-		Serial.print("Time out connection");
+		_debug_port->print("Time out connection");
 	}
-	GoProConnected = false;
-	return false;
+	_GoProConnected = false;
+	return -3;
 }
 
-uint8_t GoProControl::sendRequest(String request)
-{
-	client.stop();
-	if (!client.connect(_host.c_str(), _port))
-	{
-		if (debugStatus)
-		{
-			Serial.println("Connection lost");
-			GoProConnected = false;
-		}
-		return false;
-	}
-
-	http.begin(request);
-	int httpCode = http.GET();
-	if (httpCode > 0)
-	{
-		String payload = http.getString();
-		Serial.println(payload);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-
-	http.end();
-}
-
-String GoProControl::listen(void)
-{
-
-	uint64_t startTime = millis();
-	String firstLine;
-	String response;
-	uint8_t end_firstLine = false;
-
-	while (millis() - startTime < 3000)
-	{ //listen for 3 seconds
-		while (client.available())
-		{
-			char c = client.read();
-			response += c;
-			if (end_firstLine == false)
-			{
-				firstLine += c;
-			}
-			if (end_firstLine == false && c == '\n')
-			{
-				end_firstLine = true;
-			}
-		}
-	}
-
-	if (debugStatus)
-	{
-		Serial.println();
-		Serial.print("Received response is:\t");
-		Serial.println(response);
-		Serial.println();
-	}
-	return firstLine;
-}
-
-/*
-
-    Main
-
-*/
 void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
 {
 	byte preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -210,14 +130,56 @@ void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
 	delay(2000);
 }
 
-uint8_t GoProControl::turnOn(void)
+uint8_t GoProControl::confirmPairing()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+	{
 
-		requestURL = url + "PW?t=" + _pwd + "&p=%01";
+		_request = _url + "DL?t=" + _pwd;
+	}
+	else if (_camera >= 4)
+	{
+		_request = _url + "command/wireless/pair/complete?success=1&deviceName=ESPBoard";
+	}
+
+	return sendRequest(_request);
+}
+
+void GoProControl::enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate)
+{
+	_debug = true;
+	_debug_port = debug_port;
+	_debug_port->begin(debug_baudrate);
+}
+
+void GoProControl::disableDebug()
+{
+	_debug_port->end();
+	_debug = false;
+}
+
+uint8_t GoProControl::getGoProStatus()
+{
+	return _GoProConnected;
+}
+
+void GoProControl::printGoProStatus()
+{
+	_debug_port->print("\nSSID: ");
+	_debug_port->println(WiFi.SSID());
+	_debug_port->print("IP Address: ");
+	_debug_port->println(WiFi.localIP());
+	_debug_port->print("signal strength (RSSI):");
+	_debug_port->print(WiFi.RSSI());
+	_debug_port->println(" dBm\n");
+	//todo add more info like mode (photo, video), fow and so on
+}
+
+uint8_t GoProControl::turnOn()
+{
+	if (_camera == 3)
+	{
+		_request = _url + "PW?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= 4)
 	{
@@ -225,502 +187,494 @@ uint8_t GoProControl::turnOn(void)
 		//send Wake-On-LAN command
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::turnOff(void)
+uint8_t GoProControl::turnOff()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "PW?t=" + _pwd + "&p=%00";
+	{
+		_request = _url + "PW?t=" + _pwd + "&p=%00";
 	}
 	else if (_camera >= 4)
 	{
 
-		requestURL = url + "command/system/sleep";
+		_request = _url + "command/system/sleep";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::localizationOn(void)
+uint8_t GoProControl::startCapture()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+	{
 
-		requestURL = url + "LL?t=" + _pwd + "&p=%01";
+		_request = _url + "SH?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= 4)
 	{
 
-		requestURL = url + "command/system/locate?p=1";
+		_request = _url + "command/shutter?p=1";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::localizationOff(void)
+uint8_t GoProControl::stopCapture()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+	{
 
-		requestURL = url + "LL?t=" + _pwd + "&p=%00";
+		_request = _url + "SH?t=" + _pwd + "&p=%00";
+	}
+	else if (_camera >= 4)
+	{
+		_request = _url + "command/shutter?p=0";
+	}
+
+	return sendRequest(_request);
+}
+
+uint8_t GoProControl::localizationOn()
+{
+	if (_camera == 3)
+	{
+
+		_request = _url + "LL?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= 4)
 	{
 
-		requestURL = url + "command/system/locate?p=0";
+		_request = _url + "command/system/locate?p=1";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::startCapture(void)
+uint8_t GoProControl::localizationOff()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "SH?t=" + _pwd + "&p=%01";
+	{
+		_request = _url + "LL?t=" + _pwd + "&p=%00";
 	}
 	else if (_camera >= 4)
 	{
-
-		requestURL = url + "command/shutter?p=1";
+		_request = _url + "command/system/locate?p=0";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::stopCapture(void)
+uint8_t GoProControl::deleteLast()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "SH?t=" + _pwd + "&p=%00";
+	{
+		_request = _url + "DL?t=" + _pwd;
 	}
 	else if (_camera >= 4)
 	{
-		requestURL = url + "command/shutter?p=0";
+		_request = _url + "command/storage/delete/last";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::deleteLast(void)
+uint8_t GoProControl::deleteAll()
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "DL?t=" + _pwd;
+	{
+		_request = _url + "DA?t=" + _pwd;
 	}
 	else if (_camera >= 4)
 	{
-		requestURL = url + "command/storage/delete/last";
+		_request = _url + "command/command/storage/delete/all";
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::confirmPairing(void)
+////////////////////////////////////////////////////////////
+////////                  Settings                  ////////
+////////////////////////////////////////////////////////////
+
+uint8_t GoProControl::setMode(uint8_t option)
 {
-	String requestURL;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "DL?t=" + _pwd;
-	}
-	else if (_camera >= 4)
 	{
-		requestURL = url + "command/wireless/pair/complete?success=1&deviceName=ESPBoard";
-	}
-
-	return (sendRequest(requestURL));
-}
-
-uint8_t GoProControl::deleteAll(void)
-{
-	String requestURL;
-
-	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
-		requestURL = url + "DA?t=" + _pwd;
-	}
-	else if (_camera >= 4)
-	{
-		requestURL = url + "command/command/storage/delete/all";
-	}
-
-	return (sendRequest(requestURL));
-}
-
-/*
-
-    Settings
-
-*/
-
-uint8_t GoProControl::setCameraMode(uint8_t option)
-{
-	String requestURL;
-	String stringOption;
-
-	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
 		if (option == VIDEO_MODE)
-			stringOption = "00";
+			_option = "00";
 		else if (option == PHOTO_MODE)
-			stringOption = "01";
+			_option = "01";
 		else if (option == BURST_MODE)
-			stringOption = "02";
+			_option = "02";
 		else if (option == TIMELAPSE_MODE)
-			stringOption = "03";
+			_option = "03";
 		else if (option == TIMER_MODE)
-			stringOption = "04";
+			_option = "04";
 		else if (option == PLAY_HDMI)
-			stringOption = "05";
-		requestURL = url + "CM?t=" + _pwd + "&p=%" + stringOption;
+			_option = "05";
+		_request = _url + "CM?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		//todo: add sub-modes
 		if (option == VIDEO_MODE)
-			stringOption = "0";
+			_option = "0";
 		else if (option == PHOTO_MODE)
-			stringOption = "1";
+			_option = "1";
 		else if (option == MULTISHOT_MODE)
-			stringOption = "2";
-		requestURL = url + "command/mode?p=" + stringOption;
+			_option = "2";
+		_request = _url + "command/mode?p=" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
-uint8_t GoProControl::setCameraOrientation(uint8_t option)
+uint8_t GoProControl::setOrientation(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == ORIENTATION_UP)
-			stringOption = "00";
+			_option = "00";
 		else if (option == ORIENTATION_DOWN)
-			stringOption = "01";
+			_option = "01";
 
-		requestURL = url + "UP?t=" + _pwd + "&p=%" + stringOption;
+		_request = _url + "UP?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == ORIENTATION_UP)
-			stringOption = "0";
+			_option = "0";
 		else if (option == ORIENTATION_DOWN)
-			stringOption = "1";
+			_option = "1";
 		else if (option == ORIENTATION_AUTO)
-			stringOption = "2";
-		requestURL = url + "setting/52/" + stringOption;
+			_option = "2";
+		_request = _url + "setting/52/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setVideoResolution(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == VR_WVGA60)
-			stringOption = "00";
+			_option = "00";
 		else if (option == VR_WVGA120)
-			stringOption = "01";
+			_option = "01";
 		else if (option == VR_720_30)
-			stringOption = "02";
+			_option = "02";
 		else if (option == VR_720_60)
-			stringOption = "03";
+			_option = "03";
 		else if (option == VR_960_30)
-			stringOption = "04";
+			_option = "04";
 		else if (option == VR_960_48)
-			stringOption = "05";
+			_option = "05";
 		else if (option == VR_1080_30)
-			stringOption = "06";
+			_option = "06";
 
-		requestURL = url + "VR?t=" + _pwd + "&p=%" + stringOption;
+		_request = _url + "VR?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == VR_4K)
-			stringOption = "1";
+			_option = "1";
 		else if (option == VR_2K)
-			stringOption = "4";
+			_option = "4";
 		else if (option == VR_2K_SuperView)
-			stringOption = "5";
+			_option = "5";
 		else if (option == VR_1440p)
-			stringOption = "7";
+			_option = "7";
 		else if (option == VR_1080p_SuperView)
-			stringOption = "8";
+			_option = "8";
 		else if (option == VR_1080p)
-			stringOption = "9";
+			_option = "9";
 		else if (option == VR_960p)
-			stringOption = "10";
+			_option = "10";
 		else if (option == VR_720p_SuperView)
-			stringOption = "11";
+			_option = "11";
 		else if (option == VR_720p)
-			stringOption = "12";
+			_option = "12";
 		else if (option == VR_WVGA)
-			stringOption = "13";
+			_option = "13";
 
-		requestURL = url + "setting/2/" + stringOption;
+		_request = _url + "setting/2/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setPhotoResolution(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == PR_11mpW)
-			stringOption = "00";
+			_option = "00";
 		else if (option == PR_8mpW)
-			stringOption = "01";
+			_option = "01";
 		else if (option == PR_5mpW)
-			stringOption = "02";
+			_option = "02";
 
-		requestURL = url + "PR?t=" + _pwd + "&p=%" + stringOption;
+		_request = _url + "PR?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == PR_12MP_Wide)
-			stringOption = "0";
+			_option = "0";
 		else if (option == PR_12MP_Linear)
-			stringOption = "10";
+			_option = "10";
 		else if (option == PR_12MP_Medium)
-			stringOption = "8";
+			_option = "8";
 		else if (option == PR_12MP_Narrow)
-			stringOption = "9";
+			_option = "9";
 		else if (option == PR_7MP_Wide)
-			stringOption = "1";
+			_option = "1";
 		else if (option == PR_7MP_Medium)
-			stringOption = "2";
+			_option = "2";
 		else if (option == PR_5MP_Wide)
-			stringOption = "3";
-		requestURL = url + "setting/17/" + stringOption;
+			_option = "3";
+		_request = _url + "setting/17/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setFrameRate(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == FPS12)
-			stringOption = "00";
+			_option = "00";
 		else if (option == FPS15)
-			stringOption = "01";
+			_option = "01";
 		else if (option == FPS12p5)
-			stringOption = "0b";
+			_option = "0b";
 		else if (option == FPS24)
-			stringOption = "02";
+			_option = "02";
 		else if (option == FPS25)
-			stringOption = "03";
+			_option = "03";
 		else if (option == FPS30)
-			stringOption = "04";
+			_option = "04";
 		else if (option == FPS48)
-			stringOption = "05";
+			_option = "05";
 		else if (option == FPS50)
-			stringOption = "06";
+			_option = "06";
 		else if (option == FPS60)
-			stringOption = "07";
+			_option = "07";
 		else if (option == FPS100)
-			stringOption = "08";
+			_option = "08";
 		else if (option == FPS120)
-			stringOption = "09";
+			_option = "09";
 		else if (option == FPS240)
-			stringOption = "0a";
-		requestURL = url + "FS?t=" + _pwd + "&p=%" + stringOption;
+			_option = "0a";
+		_request = _url + "FS?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == FR_240)
-			stringOption = "0";
+			_option = "0";
 		else if (option == FR_120)
-			stringOption = "1";
+			_option = "1";
 		else if (option == FR_100)
-			stringOption = "2";
+			_option = "2";
 		else if (option == FR_90)
-			stringOption = "3";
+			_option = "3";
 		else if (option == FR_80)
-			stringOption = "4";
+			_option = "4";
 		else if (option == FR_60)
-			stringOption = "5";
+			_option = "5";
 		else if (option == FR_50)
-			stringOption = "6";
+			_option = "6";
 		else if (option == FR_48)
-			stringOption = "7";
+			_option = "7";
 		else if (option == FR_30)
-			stringOption = "8";
+			_option = "8";
 		else if (option == FR_25)
-			stringOption = "9";
-		requestURL = url + "setting/3/" + stringOption;
+			_option = "9";
+		_request = _url + "setting/3/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setFov(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == WIDE_FOV)
-			stringOption = "00";
+			_option = "00";
 		else if (option == MEDIUM_FOV)
-			stringOption = "01";
+			_option = "01";
 		else if (option == NARROW_FOV)
-			stringOption = "02";
-		requestURL = url + "FV?t=" + _pwd + "&p=%" + stringOption;
+			_option = "02";
+		_request = _url + "FV?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == WIDE_FOV)
-			stringOption = "0";
+			_option = "0";
 		else if (option == MEDIUM_FOV)
-			stringOption = "1";
+			_option = "1";
 		else if (option == NARROW_FOV)
-			stringOption = "2";
+			_option = "2";
 		else if (option == LINEAR_FOV)
-			stringOption = "4";
+			_option = "4";
 
-		requestURL = url + "setting/4/" + stringOption;
+		_request = _url + "setting/4/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setVideoMode(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == NTSC)
-			stringOption = "00";
+			_option = "00";
 		else if (option == PAL)
-			stringOption = "01";
-		requestURL = url + "VM?t=" + _pwd + "&p=%" + stringOption;
+			_option = "01";
+		_request = _url + "VM?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == NTSC)
-			stringOption = "0";
+			_option = "0";
 		else if (option == PAL)
-			stringOption = "1";
-		requestURL = url + "setting/57/" + stringOption;
+			_option = "1";
+		_request = _url + "setting/57/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setTimeLapseInterval(float option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == 0.5)
-			stringOption = "00";
+			_option = "00";
 		else if (option == 1)
-			stringOption = "01";
+			_option = "01";
 		else if (option == 5)
-			stringOption = "05";
+			_option = "05";
 		else if (option == 10)
-			stringOption = "0a";
+			_option = "0a";
 		else if (option == 30)
-			stringOption = "1e";
+			_option = "1e";
 		else if (option == 60)
-			stringOption = "3c";
-		requestURL = url + "TI?t=" + _pwd + "&p=%" + stringOption;
+			_option = "3c";
+		_request = _url + "TI?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		if (option == 0.5)
-			stringOption = "0";
+			_option = "0";
 		else if (option == 1)
-			stringOption = "1";
+			_option = "1";
 		else if (option == 2)
-			stringOption = "1";
+			_option = "1";
 		else if (option == 5)
-			stringOption = "3";
+			_option = "3";
 		else if (option == 10)
-			stringOption = "4";
+			_option = "4";
 		else if (option == 30)
-			stringOption = "5";
+			_option = "5";
 		else if (option == 60)
-			stringOption = "6";
-		requestURL = url + "setting/5/" + stringOption;
+			_option = "6";
+		_request = _url + "setting/5/" + _option;
 	}
 
-	return (sendRequest(requestURL));
+	return sendRequest(_request);
 }
 
 uint8_t GoProControl::setContinuousShot(uint8_t option)
 {
-	String requestURL;
-	String stringOption;
-
 	if (_camera == 3)
-	{ //HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-
+	{
 		if (option == 0)
-			stringOption = "00";
+			_option = "00";
 		else if (option == 3)
-			stringOption = "03";
+			_option = "03";
 		else if (option == 5)
-			stringOption = "05";
+			_option = "05";
 		else if (option == 10)
-			stringOption = "0a";
-		requestURL = url + "CS?t=" + _pwd + "&p=%" + stringOption;
+			_option = "0a";
+		_request = _url + "CS?t=" + _pwd + "&p=%" + _option;
 	}
 	else if (_camera >= 4)
 	{
 		// Not supported in Hero4/5/6/7
 		return false;
 	}
+	return sendRequest(_request);
+}
 
-	return (sendRequest(requestURL));
+////////////////////////////////////////////////////////////
+////////               Communication               /////////
+////////////////////////////////////////////////////////////
+
+uint8_t GoProControl::sendRequest(String request)
+{
+	_client.stop();
+	if (!_client.connect(_host.c_str(), _port))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connection lost");
+			_GoProConnected = false;
+		}
+		return false;
+	}
+
+	_http.begin(request);
+	int httpCode = _http.GET();
+	if (httpCode > 0)
+	{
+		String payload = _http.getString();
+		_debug_port->println(payload);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+	_http.end();
+}
+
+String GoProControl::listen()
+{
+	uint64_t startTime = millis();
+	String firstLine;
+	String response;
+	uint8_t end_firstLine = false;
+
+	while ((millis() - startTime < 3000) /* && (end_firstline == false) */) //listen for 3 seconds
+	{
+		while (_client.available())
+		{
+			char c = _client.read();
+			response += c;
+			if (end_firstLine == false)
+			{
+				firstLine += c;
+			}
+			if (end_firstLine == false && c == '\n')
+			{
+				end_firstLine = true;
+			}
+		}
+	}
+
+	if (_debug)
+	{
+		_debug_port->println();
+		_debug_port->print("Received response is:\t");
+		_debug_port->println(response);
+		_debug_port->println();
+	}
+	return firstLine;
 }
