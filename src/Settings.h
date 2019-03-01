@@ -30,6 +30,7 @@ enum camera
     HERO7
 };
 
+//The above settings must be between a *_first and *_last member
 enum mode
 {
     mode_first = 0,
@@ -39,7 +40,7 @@ enum mode
     TIMELAPSE_MODE,
     TIMER_MODE,
     PLAY_HDMI,
-    MULTISHOT_MODE, //Hero4/5/6 modes:
+    MULTISHOT_MODE,
     mode_last
 };
 
@@ -48,7 +49,7 @@ enum orientation
     orientation_first = mode_last + 1,
     ORIENTATION_UP,
     ORIENTATION_DOWN,
-    ORIENTATION_AUTO, // Hero4/5/6
+    ORIENTATION_AUTO,
     orientation_last
 };
 
@@ -130,7 +131,7 @@ enum fov
     WIDE_FOV,
     MEDIUM_FOV,
     NARROW_FOV,
-    LINEAR_FOV, // Hero4/5/6
+    LINEAR_FOV,
     fov_last
 };
 

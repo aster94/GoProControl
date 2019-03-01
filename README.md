@@ -39,31 +39,59 @@ I made the library with a style which would be quite easy to add other cameras (
 
 | Mode | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| VIDEO_MODE |✔ | ✔|
-| PHOTO_MODE | ✔ |✔ |
-| BURST_MODE |✔  | ✔|
-| TIMELAPSE_MODE | ✔ |✔ |
-| TIMER_MODE |✔  |✔ |
-| PLAY_HDMI | ✔ | ✔|
-| MULTISHOT_MODE |  | ✔|
+| VIDEO_MODE | ✔ | ✔ |
+| PHOTO_MODE | ✔ | ✔ |
+| BURST_MODE | ✔  | ✔ |
+| TIMELAPSE_MODE | ✔ | ✔ |
+| TIMER_MODE | ✔  | ✔ |
+| PLAY_HDMI | ✔ | ✔ |
+| MULTISHOT_MODE |  | ✔ |
 
 | Orientation | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| ORIENTATION_UP |✔ | ✔|
-| ORIENTATION_DOWN | ✔ |✔ |
-| ORIENTATION_AUTO |  | ✔|
+| ORIENTATION_UP | ✔ | ✔ |
+| ORIENTATION_DOWN | ✔ | ✔ |
+| ORIENTATION_AUTO |  | ✔ |
+
+| Video Resolution | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+|  |  |  |
+
+| Photo Resolution | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+|  |  |  |
+
+| Frame Rate | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+|  |  |  |
 
 | Field Of View | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| WIDE_FOV |✔ | ✔|
-| MEDIUM_FOV | ✔ |✔ |
-| NARROW_FOV | ✔ |✔ |
-| LINEAR_FOV |  | ✔|
+| WIDE_FOV | ✔ | ✔ |
+| MEDIUM_FOV | ✔ | ✔ |
+| NARROW_FOV | ✔ | ✔ |
+| LINEAR_FOV |  | ✔ |
 
 | Video Encoding | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| NTSC |✔ | ✔|
-| PAL | ✔ |✔ |
+| NTSC | ✔ | |
+| PAL | ✔ | ✔ |
+
+| Time Lapse | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+| 0.5 | ✔ | ✔ |
+| 1 | ✔ | ✔ |
+| 5 | ✔ | ✔ |
+| 10 | ✔ | ✔ |
+| 30 | ✔ | ✔ |
+| 60 | ✔ | ✔ |
+
+| Continuous Shot | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+| 0 | ✔ | |
+| 3 | ✔ |  |
+| 5 | ✔ |  |
+| 10 | ✔ |  |
 
 ## Examples:
 
