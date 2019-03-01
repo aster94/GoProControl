@@ -13,18 +13,18 @@
 #define HERO	1
 #define HERO2	2
 #define HERO3	3
-#define HERO3P	31	//HERO3+
-#define HERO3B	32	//HERO3BLACK
-#define HERO3BP	33	//HERO3BLACK+
 #define HERO4	4
 #define HERO5	5
 #define HERO6	6
+#define HERO7 7
 
 #include <Arduino.h>
 
 #if defined (ARDUINO_ARCH_ESP8266)
 	#include "ESP8266WiFi.h"
 	#include <ESP8266HTTPClient.h>
+	#include <WiFiUdp.h>
+
 #else
 	#define ESP_AT
 	#include "WiFiEsp.h"
@@ -155,8 +155,9 @@ class GoProControl{
 
     uint8_t deleteLast(void);
     uint8_t deleteAll(void);
+	static void sendWoL(WiFiUDP udp, byte * mac, size_t size_of_mac);
+	uint8_t confirmPairing(void);
 
-	
   private:
 #if defined (ESP_AT)
 	WiFiEspClient client;
@@ -180,4 +181,3 @@ class GoProControl{
 };
 
 #endif	//GOPRO_CONTROL_H
-

@@ -1,0 +1,15 @@
+/* Replace __YOUR__CAMERA__NAME__ by the SSID of your GoPro */
+/* Replace __YOUR__CAMERA__PASS__ by the password of your GoPro */
+
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#define GOPRO_SSID "__YOUR__CAMERA__NAME__"
+
+#define GOPRO_PASS "__YOUR__CAMERA__PASS__"
+
+#define GOPRO_2_SSID "__YOUR__CAMERA__NAME__"
+
+#define GOPRO_2_PASS "__YOUR__CAMERA__PASS__"
+
+#endif
