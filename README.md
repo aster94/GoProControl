@@ -6,13 +6,23 @@ This is a library to interface with GoPro cameras over WiFi, just press a button
 
 ![Alt text](/extras/gopros_and_esps.jpg?raw=true "GoPro4")
 
-Have you ever thought about the possibility to control your action camera with your Arduino? Well if you are here because you googled that here you may be interested in watching this video
+Have you ever thought about the possibility to control your action camera with your Arduino? Well if you are here because you googled that you may be interested in watching this video
 
 [![Alt text](https://img.youtube.com/vi/PuM-ZQ2tMW0/0.jpg)](https://www.youtube.com/watch?v=PuM-ZQ2tMW0)
 
-click to watch it on youtube
+## Supported actions
 
-In the video I take a picture, change the mode from photo to video, start and stop a video, I delete a file and finally I turn off the GoPro. But these are only a few of the functions that are possible to do with this library. For example you could change the FOV (field of view), the frame rate, the photo and video resolution, turn the localization on or off, rotate the orientation of the camera and more
+- take a picture
+- start and stop a video
+- change the mode (photo, video, etc)
+- delete last file or format the SD
+- turn the camera on/off
+- change the field of view (FOV)
+- change frame rate
+- change photo and video resolution
+- turn the localization on/off
+- change the orientation
+- more?
 
 ## Supported boards:
 
@@ -87,7 +97,7 @@ I made the library with a style which would be quite easy to add other cameras (
 
 | Video Encoding | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| NTSC | ✔ | |
+| NTSC | ✔ | ✔ |
 | PAL | ✔ | ✔ |
 
 | Time Lapse | HERO3 | HERO4,5,6,7 |
@@ -101,7 +111,7 @@ I made the library with a style which would be quite easy to add other cameras (
 
 | Continuous Shot | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| 0 | ✔ | |
+| 0 | ✔ |  |
 | 3 | ✔ |  |
 | 5 | ✔ |  |
 | 10 | ✔ |  |
