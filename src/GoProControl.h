@@ -23,13 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <Arduino.h>
 #include <Settings.h>
 
-#include <WiFiUdp.h>
-
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiUdp.h>
 #elif defined(ARDUINO_ARCH_ESP32)
 #include <HTTPClient.h>
+#include <WiFiUdp.h>
 #endif
 
 class GoProControl
@@ -40,32 +40,40 @@ class GoProControl
 	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
 	uint8_t confirmPairing();
 
-	void enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate = 115200);
-	void disableDebug();
-	uint8_t getGoProStatus();
-	void printGoProStatus();
-
+	// on/off
 	uint8_t turnOn();
 	uint8_t turnOff();
 
-	uint8_t startCapture();
-	uint8_t stopCapture();
+	// Shoot
+	uint8_t shoot();
+	uint8_t stopShoot();
 
+	// Settings
+	uint8_t setMode(uint8_t option);
+	uint8_t setOrientation(uint8_t option);
+
+	// Video
+	uint8_t setVideoResolution(uint8_t option);
+	uint8_t setVideoFov(uint8_t option);
+	uint8_t setFrameRate(uint8_t option);
+	uint8_t setVideoEncoding(uint8_t option);
+
+	// Photo
+	uint8_t setPhotoResolution(uint8_t option);
+	uint8_t setTimeLapseInterval(float option);
+	uint8_t setContinuousShot(uint8_t option);
+
+	// Others
 	uint8_t localizationOn();
 	uint8_t localizationOff();
-
 	uint8_t deleteLast();
 	uint8_t deleteAll();
 
-	uint8_t setMode(uint8_t option);
-	uint8_t setOrientation(uint8_t option);
-	uint8_t setVideoResolution(uint8_t option);
-	uint8_t setPhotoResolution(uint8_t option);
-	uint8_t setFrameRate(uint8_t option);
-	uint8_t setFov(uint8_t option);
-	uint8_t setVideoEncoding(uint8_t option);
-	uint8_t setTimeLapseInterval(float option);
-	uint8_t setContinuousShot(uint8_t option);
+	// Debug
+	void enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate = 115200);
+	void disableDebug();
+	uint8_t getStatus();
+	void printStatus();
 
   private:
 	WiFiClient _client;
@@ -82,14 +90,13 @@ class GoProControl
 	String _request;
 	String _option;
 
-	uint8_t _GoProConnected = false;
+	uint8_t _connected = false;
 
 	HardwareSerial *_debug_port;
 	uint8_t _debug;
 
 	uint8_t sendRequest(String request);
-	String listen();
-	uint8_t validMode(int16_t mode, int16_t first, int16_t last);
+	String listenResponse();
 };
 
 #endif //GOPRO_CONTROL_H

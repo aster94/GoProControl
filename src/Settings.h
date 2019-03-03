@@ -39,7 +39,7 @@ enum mode
     BURST_MODE,
     TIMELAPSE_MODE,
     TIMER_MODE,
-    PLAY_HDMI,
+    PLAY_HDMI_MODE,
     MULTISHOT_MODE,
     mode_last
 };
@@ -56,14 +56,7 @@ enum orientation
 enum video_resolution
 {
     video_resolution_first = orientation_last + 1,
-    VR_WVGA60,
-    VR_WVGA120,
-    VR_720_30,
-    VR_720_60,
-    VR_960_30,
-    VR_960_48,
-    VR_1080_30,
-    //Resolutions Hero4/5/6
+    // resolutions for HERO 4/5/6/7
     VR_4K,
     VR_2K,
     VR_2K_SuperView,
@@ -74,44 +67,30 @@ enum video_resolution
     VR_720p_SuperView,
     VR_720p,
     VR_WVGA,
+    // in the HERO3 and earlier the video resolution and frame rate are set together
+    VR_1080p_30,
+    VR_960p_48,
+    VR_960p_30,
+    VR_720p_60,
+    VR_720p_30,
+    VR_WVGA_120,
+    VR_WVGA_60,
     video_resolution_last
 };
 
-enum photo_resolution
+enum video_fov
 {
-    photo_resolution_first = video_resolution_last + 1,
-    PR_12mpW,
-    PR_11mpW,
-    PR_8mpW,
-    PR_7mpW,
-    PR_5mpW,
-    //Photo Resolution Hero 4/5/6
-    PR_12MP_Wide,
-    PR_12MP_Linear,
-    PR_12MP_Medium,
-    PR_12MP_Narrow,
-    PR_7MP_Wide,
-    PR_7MP_Medium,
-    PR_5MP_Wide,
-    photo_resolution_last
+    video_fov_first = video_resolution_last + 1,
+    WIDE_FOV,
+    MEDIUM_FOV,
+    NARROW_FOV,
+    LINEAR_FOV,
+    video_fov_last
 };
 
 enum frame_rate
 {
-    frame_rate_first = photo_resolution_last + 1,
-    FPS12,
-    FPS15,
-    FPS12p5,
-    FPS24,
-    FPS25,
-    FPS30,
-    FPS48,
-    FPS50,
-    FPS60,
-    FPS100,
-    FPS120,
-    FPS240,
-    // Frame rates Hero4/5/6
+    frame_rate_first = video_fov_last + 1,
     FR_240,
     FR_120,
     FR_100,
@@ -122,23 +101,34 @@ enum frame_rate
     FR_48,
     FR_30,
     FR_25,
+    FR_24,
+    FR_15,
+    FR_12p5,
+    FR_12,
     frame_rate_last
-};
-
-enum fov
-{
-    fov_first = frame_rate_last + 1,
-    WIDE_FOV,
-    MEDIUM_FOV,
-    NARROW_FOV,
-    LINEAR_FOV,
-    fov_last
 };
 
 enum video_encoding
 {
-    video_encoding_first = fov_last + 1,
+    video_encoding_first = frame_rate_last + 1,
     NTSC,
     PAL,
     video_encoding_last
+};
+
+enum photo_resolution
+{
+    photo_resolution_first = video_encoding_last + 1,
+    PR_12MP_WIDE,
+    PR_12MP_MEDIUM,
+    PR_12MP_NARROW,
+    PR_12MP_LINEAR,
+    PR_11MP_WIDE,
+    PR_8MP_WIDE,
+    PR_8MP_MEDIUM,
+    PR_7MP_WIDE,
+    PR_7MP_MEDIUM,
+    PR_5MP_WIDE,
+    PR_5MP_MEDIUM,
+    photo_resolution_last
 };
