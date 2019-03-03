@@ -67,7 +67,7 @@ I made the library with a style which would be quite easy to add other cameras (
 | BURST_MODE | ✔  | ✔ |
 | TIMELAPSE_MODE | ✔ | ✔ |
 | TIMER_MODE | ✔  | ✔ |
-| PLAY_HDMI | ✔ | ✔ |
+| PLAY_HDMI_MODE | ✔ | ✔ |
 | MULTISHOT_MODE |  | ✔ |
 
 | Orientation | HERO3 | HERO4,5,6,7 |
@@ -78,15 +78,16 @@ I made the library with a style which would be quite easy to add other cameras (
 
 | Video Resolution | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-|  |  |  |
-
-| Photo Resolution | HERO3 | HERO4,5,6,7 |
-| --- | :---: | :---: |
-|  |  |  |
-
-| Frame Rate | HERO3 | HERO4,5,6,7 |
-| --- | :---: | :---: |
-|  |  |  |
+| VR_4K |  | ✔ |
+| VR_2K |  | ✔ |
+| VR_2K_SuperView |  | ✔ |
+| VR_1440p |  | ✔ |
+| VR_1080p_SuperView |  | ✔ |
+| VR_1080p | ✔ | ✔ |
+| VR_960p | ✔ | ✔ |
+| VR_720p_SuperView |  | ✔ |
+| VR_720p | ✔ | ✔ |
+| VR_WVGA | ✔ | ✔ |
 
 | Field Of View | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
@@ -95,10 +96,41 @@ I made the library with a style which would be quite easy to add other cameras (
 | NARROW_FOV | ✔ | ✔ |
 | LINEAR_FOV |  | ✔ |
 
+| Frame Rate | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+| FR_240 | ✔ | ✔ |
+| FR_120 | ✔ | ✔ |
+| FR_100 | ✔ | ✔ |
+| FR_90 |  | ✔ |
+| FR_80 |  | ✔ |
+| FR_60 | ✔ | ✔ |
+| FR_50 | ✔ | ✔ |
+| FR_48 | ✔ | ✔ |
+| FR_30 | ✔ | ✔ |
+| FR_25 | ✔ | ✔ |
+| FR_24 | ✔ |  |
+| FR_15 | ✔ |  |
+| FR_12p5 | ✔ |  |
+| FR_12 | ✔ |  |
+
 | Video Encoding | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
 | NTSC | ✔ | ✔ |
 | PAL | ✔ | ✔ |
+
+| Photo Resolution | HERO3 | HERO4,5,6,7 |
+| --- | :---: | :---: |
+| PR_12MP_WIDE |  | ✔ |
+| PR_12MP_MEDIUM |  | ✔ |
+| PR_12MP_NARROW |  | ✔ |
+| PR_12MP_LINEAR |  | ✔ |
+| PR_11MP_WIDE | ✔ | ✔ |
+| PR_8MP_WIDE | ✔ | ✔ |
+| PR_8MP_MEDIUM |  | ✔ |
+| PR_7MP_WIDE |  | ✔ |
+| PR_7MP_MEDIUM |  | ✔ |
+| PR_5MP_WIDE | ✔ | ✔ |
+| PR_5MP_MEDIUM |  | ✔ |
 
 | Time Lapse | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
