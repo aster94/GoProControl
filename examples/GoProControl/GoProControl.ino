@@ -12,11 +12,7 @@ WiFiUDP udp;
 
 void setup()
 {
-  Serial.begin(115200);
   gp.enableDebug(&Serial);
-  while (!Serial)
-    ;
-  Serial.println("starting");
   udp.begin(9);
 }
 
@@ -36,7 +32,7 @@ void loop()
   //connect
   case 'C':
     Serial.println("trying connection");
-    if (!gp.getGoProStatus())
+    if (!gp.getStatus())
     {
       gp.begin();
     }
@@ -48,7 +44,7 @@ void loop()
 
   //turn on/off
   case 'T':
-    if (gp.getGoProStatus())
+    if (gp.getStatus())
     {
       Serial.print("turn ");
 
@@ -75,10 +71,10 @@ void loop()
 
   //start/stop capture
   case 'A':
-    if (gp.getGoProStatus())
+    if (gp.getStatus())
     {
       Serial.print("shoot");
-      if (gp.startCapture())
+      if (gp.shoot())
       {
         Serial.println("did");
       }
@@ -91,7 +87,7 @@ void loop()
 
   case 'S':
     Serial.println("stop");
-    if (gp.stopCapture())
+    if (gp.stopShoot())
       break;
 
   //set mode
@@ -112,19 +108,19 @@ void loop()
     break;
 
   case 'W':
-    gp.setFov(MEDIUM_FOV);
+    gp.setVideoFov(MEDIUM_FOV);
     break;
 
   case 'E':
-    gp.setFrameRate(FPS120);
+    gp.setFrameRate(FR_120);
     break;
 
   case 'f':
-    gp.setPhotoResolution(PR_11mpW);
+    gp.setPhotoResolution(PR_11MP_WIDE);
     break;
 
   case 'F':
-    gp.setVideoResolution(VR_1080_30);
+    gp.setVideoResolution(VR_1080p_30);
     break;
 
   case 'L':

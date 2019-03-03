@@ -13,9 +13,6 @@ void setup()
 {
   Hero_Seven.enableDebug(&Serial);
   Hero_Four.enableDebug(&Serial);
-  while (!Serial)
-    ;
-  Serial.println("starting");
   udp.begin(9);
 }
 
@@ -24,14 +21,14 @@ void loop()
   // Shoot
   Hero_Seven.begin();
   delay(4000);
-  if (!Hero_Seven.startCapture())
+  if (!Hero_Seven.shoot())
   {
     Hero_Seven.begin();
   }
   delay(4000);
   Hero_Four.begin();
   delay(4000);
-  Hero_Four.startCapture();
+  Hero_Four.shoot();
 
   delay(4000);
 }
