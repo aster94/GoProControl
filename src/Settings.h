@@ -56,7 +56,6 @@ enum orientation
 enum video_resolution
 {
     video_resolution_first = orientation_last + 1,
-    // resolutions for HERO 4/5/6/7
     VR_4K,
     VR_2K,
     VR_2K_SuperView,
@@ -67,14 +66,6 @@ enum video_resolution
     VR_720p_SuperView,
     VR_720p,
     VR_WVGA,
-    // in the HERO3 and earlier the video resolution and frame rate are set together
-    VR_1080p_30,
-    VR_960p_48,
-    VR_960p_30,
-    VR_720p_60,
-    VR_720p_30,
-    VR_WVGA_120,
-    VR_WVGA_60,
     video_resolution_last
 };
 

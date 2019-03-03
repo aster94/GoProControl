@@ -304,26 +304,17 @@ uint8_t GoProControl::setVideoResolution(uint8_t option)
 	{
 		switch (option)
 		{
-		case VR_1080p_30:
+		case VR_1080p:
 			_option = "06";
 			break;
-		case VR_960p_48:
+		case VR_960p:
 			_option = "05";
 			break;
-		case VR_960p_30:
-			_option = "04";
-			break;
-		case VR_720p_60:
+		case VR_720p:
 			_option = "03";
 			break;
-		case VR_720p_30:
-			_option = "02";
-			break;
-		case VR_WVGA_120:
+		case VR_WVGA:
 			_option = "01";
-			break;
-		case VR_WVGA_60:
-			_option = "00";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoResolution");
