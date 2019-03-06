@@ -19,8 +19,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include <GoProControl.h>
 
-GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
+GoProControl::GoProControl(WiFiClient client, String ssid, String pwd, uint8_t camera)
 {
+	_client = client;
 	_ssid = ssid;
 	_pwd = pwd;
 	_camera = camera;
@@ -29,9 +30,6 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
 	{
 		// URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
 		// example:	  http://10.5.5.9/camera/SH?t=password&p=%01
-
-		_host = "10.5.5.9";
-		_port = 80;
 
 		_url = "http://" + _host + "/camera/";
 	}
@@ -43,8 +41,6 @@ GoProControl::GoProControl(String ssid, String pwd, uint8_t camera)
 		// Settings: http://HOST/gp/gpControl/setting/SETTING/option
 		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
 
-		_host = "10.5.5.9";
-		_port = 80;
 		_url = "http://" + _host + "/gp/gpControl/";
 	}
 }
@@ -60,44 +56,46 @@ uint8_t GoProControl::begin()
 		return -1;
 	}
 
-	char ssid_c[_ssid.length()];
-	sprintf(ssid_c, "%s", _ssid.c_str());
-
-	char pwd_c[_pwd.length()];
-	sprintf(pwd_c, "%s", _pwd.c_str());
-
-	WiFi.begin(ssid_c, pwd_c);
-
-	uint64_t timeStart = millis();
-
-	while (millis() - timeStart < TIME_OUT_CONNECTION) // WL_IDLE_STATUS it is a temporary status assigned when WiFi.begin() is called and remains active until the number of attempts expires (resulting in WL_CONNECT_FAILED) or a connection is established (resulting in WL_CONNECTED);
-	{
-		if (_debug)
-		{
-			_debug_port->print("Attempting to connect to SSID: ");
-			_debug_port->println(_ssid);
-			_debug_port->print("using password: ");
-			_debug_port->println(_pwd);
-		}
-		delay(1500);
-
-		if (WiFi.status() == WL_CONNECTED)
-		{
-			if (_debug)
-			{
-				_debug_port->print("Connected");
-			}
-			_connected = true;
-			return true;
-		}
-	}
+	WiFi.begin(_ssid.c_str(), _pwd.c_str());
 
 	if (_debug)
 	{
-		_debug_port->print("Time out connection");
+		_debug_port->print("Attempting to connect to SSID: ");
+		_debug_port->println(_ssid);
+		_debug_port->print("using password: ");
+		_debug_port->println(_pwd);
 	}
-	_connected = false;
-	return -3;
+
+	while (WiFi.status() == WL_IDLE_STATUS)
+	{
+		;
+	}
+
+	if (WiFi.status() == WL_CONNECTED)
+	{
+		if (_debug)
+		{
+			_debug_port->print("Connected");
+		}
+		_connected = true;
+		return true;
+	}
+	else if (WiFi.status() == WL_CONNECT_FAILED)
+	{
+		if (_debug)
+		{
+			_debug_port->print("Connection failed");
+		}
+		_connected = false;
+		return -2;
+	}
+	else
+	{
+		_debug_port->print("WiFi.status(): ");
+		_debug_port->println(WiFi.status());
+		_connected = false;
+		return false;
+	}
 }
 
 void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
@@ -835,7 +833,7 @@ void GoProControl::printStatus()
 
 uint8_t GoProControl::sendRequest(String request)
 {
-	_client.stop();
+	//_client.stop(); //is it needed?
 	if (!_client.connect(_host.c_str(), _port))
 	{
 		if (_debug)
@@ -846,52 +844,24 @@ uint8_t GoProControl::sendRequest(String request)
 		return false;
 	}
 
-	_http.begin(request);
-	int httpCode = _http.GET();
-	if (httpCode > 0)
+	_http.get(request);
+	uint16_t response = _http.responseStatusCode();
+
+	if (_debug)
 	{
-		String payload = _http.getString();
-		_debug_port->println(payload);
+		_debug_port->println("Request: " + request);
+		_debug_port->print("Status code: ");
+		_debug_port->println(response);
+		_debug_port->print("Response: ");
+		_debug_port->println(_http.responseBody());
+	}
+
+	if (response == 200)
+	{
 		return true;
 	}
 	else
 	{
-		return false;
+		return -1;
 	}
-
-	_http.end();
-}
-
-String GoProControl::listenResponse() //never called?
-{
-	uint64_t startTime = millis();
-	String firstLine;
-	String response;
-	uint8_t end_firstLine = false;
-
-	while ((millis() - startTime < 3000) /* && (end_firstline == false) */) //listen for 3 seconds
-	{
-		while (_client.available())
-		{
-			char c = _client.read();
-			response += c;
-			if (end_firstLine == false)
-			{
-				firstLine += c;
-			}
-			if (end_firstLine == false && c == '\n')
-			{
-				end_firstLine = true;
-			}
-		}
-	}
-
-	if (_debug)
-	{
-		_debug_port->println();
-		_debug_port->print("Received response is:\t");
-		_debug_port->println(response);
-		_debug_port->println();
-	}
-	return firstLine;
 }

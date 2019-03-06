@@ -21,21 +21,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define GOPRO_CONTROL_H
 
 #include <Arduino.h>
+#include <ArduinoHttpClient.h>
 #include <Settings.h>
+
 
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
 #include <WiFiUdp.h>
 #elif defined(ARDUINO_ARCH_ESP32)
-#include <HTTPClient.h>
+#include <WiFi.h>
 #include <WiFiUdp.h>
 #endif
+
 
 class GoProControl
 {
   public:
-	GoProControl(String ssid, String pwd, uint8_t camera);
+	GoProControl(WiFiClient client, String ssid, String pwd, uint8_t camera);
 	uint8_t begin();
 	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
 	uint8_t confirmPairing();
@@ -77,16 +79,15 @@ class GoProControl
 
   private:
 	WiFiClient _client;
-	HTTPClient _http;
+	String _host = "10.5.5.9";
+	uint16_t _port = 80;
+	HttpClient _http = HttpClient(_client, _host, _port);
 
-	String _url;
 	String _ssid;
 	String _pwd;
-
 	uint8_t _camera;
-	String _host;
-	uint16_t _port;
 
+	String _url;
 	String _request;
 	String _option;
 
@@ -96,7 +97,6 @@ class GoProControl
 	uint8_t _debug;
 
 	uint8_t sendRequest(String request);
-	String listenResponse();
 };
 
 #endif //GOPRO_CONTROL_H

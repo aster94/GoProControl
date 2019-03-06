@@ -5,7 +5,7 @@
 #define CONSTANTS_H
 
 #define GOPRO_SSID "__YOUR__CAMERA__NAME__"
-
 #define GOPRO_PASS "__YOUR__CAMERA__PASS__"
+#define CAMERA HEROX
 
 #endif

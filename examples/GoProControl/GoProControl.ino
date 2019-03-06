@@ -1,7 +1,9 @@
 #include <GoProControl.h>
+#include <WiFi.h>
 #include "Constants.h"
 
-GoProControl gp(GOPRO_SSID, GOPRO_PASS, HERO7);
+WiFiClient gopro_client;
+GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA);
 
 uint8_t onStatus = true;
 char in = 0;
@@ -21,7 +23,7 @@ void loop()
   if (Serial.available() > 0)
   {
     in = Serial.read();
-    //Serial.write(in);
+    Serial.write(in);
   }
 
   switch (in)
@@ -120,7 +122,7 @@ void loop()
     break;
 
   case 'F':
-    gp.setVideoResolution(VR_1080p_30);
+    gp.setVideoResolution(VR_1080p);
     break;
 
   case 'L':
