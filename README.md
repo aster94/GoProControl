@@ -134,19 +134,20 @@ I made the library with a style which would be quite easy to add other cameras (
 
 | Time Lapse | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| 0.5 | ✔ | ✔ |
-| 1 | ✔ | ✔ |
-| 5 | ✔ | ✔ |
-| 10 | ✔ | ✔ |
-| 30 | ✔ | ✔ |
 | 60 | ✔ | ✔ |
+| 30 | ✔ | ✔ |
+| 10 | ✔ | ✔ |
+| 5 | ✔ | ✔ |
+| 1 | ✔ | ✔ |
+| 0.5 | ✔ | ✔ |
 
 | Continuous Shot | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
-| 0 | ✔ |  |
-| 3 | ✔ |  |
-| 5 | ✔ |  |
 | 10 | ✔ |  |
+| 5 | ✔ |  |
+| 3 | ✔ |  |
+| 0 | ✔ |  |
+
 
 ## Reference
 
