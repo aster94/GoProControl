@@ -23,7 +23,7 @@ void loop()
   if (Serial.available() > 0)
   {
     in = Serial.read();
-    Serial.write(in);
+    //Serial.write(in);
   }
 
   switch (in)
@@ -34,56 +34,34 @@ void loop()
   //connect
   case 'C':
     Serial.println("trying connection");
-    if (!gp.getStatus())
-    {
-      gp.begin();
-    }
-    else
-    {
-      Serial.println("already connected");
-    }
+    gp.begin();
+
     break;
 
   //turn on/off
   case 'T':
-    if (gp.getStatus())
+    Serial.print("turn ");
+    onStatus = !onStatus;
+    if (onStatus)
     {
-      Serial.print("turn ");
-
-      onStatus = !onStatus;
-      if (onStatus)
-      {
-        Serial.println("on");
-        gp.sendWoL(udp, macAddr, sizeof macAddr);
-        if (gp.turnOn())
-          Serial.println("did");
-      }
-      else
-      {
-        Serial.println("off");
-        if (gp.turnOff())
-          Serial.println("did");
-      }
+      Serial.println("on");
+      if (gp.turnOn())
+        Serial.println("did");
     }
     else
     {
-      Serial.println("connect the camera first!");
+      Serial.println("off");
+      if (gp.turnOff())
+        Serial.println("did");
     }
     break;
 
   //start/stop capture
   case 'A':
-    if (gp.getStatus())
+    Serial.print("shoot");
+    if (gp.shoot())
     {
-      Serial.print("shoot");
-      if (gp.shoot())
-      {
-        Serial.println("did");
-      }
-    }
-    else
-    {
-      Serial.println("connect the camera first!");
+      Serial.println("did");
     }
     break;
 
@@ -148,8 +126,17 @@ void loop()
   case 'p':
     gp.confirmPairing();
     break;
+
+  case 'X':
+    gp.end();
+    break;
+
+  case 'z':
+    gp.sendWoL(udp, macAddr, sizeof macAddr);
+    break;
   }
 
   in = 0;
   delay(100);
+  //gp.keepAlive();
 }

@@ -40,12 +40,13 @@ class GoProControl
 	uint8_t begin();
 	void end();
 	uint8_t keepAlive();
-	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
 	uint8_t confirmPairing();
 
 	// on/off
 	uint8_t turnOn();
 	uint8_t turnOff();
+	uint8_t isOn();
+	uint8_t checkConnection();
 
 	// Shoot
 	uint8_t shoot();
@@ -78,6 +79,9 @@ class GoProControl
 	uint8_t getStatus();
 	void printStatus();
 
+	// to move as private
+	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
+
   private:
 	WiFiClient _client;
 	const String _host = "10.5.5.9";
@@ -97,6 +101,7 @@ class GoProControl
 	uint8_t _debug;
 
 	uint8_t sendRequest(const String request);
+	
 };
 
 #endif //GOPRO_CONTROL_H

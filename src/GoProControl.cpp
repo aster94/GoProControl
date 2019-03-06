@@ -38,7 +38,7 @@ GoProControl::GoProControl(WiFiClient client, const String ssid, const String pw
 		// URL scheme: http://HOST/gp/gpControl/....
 		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION
 		// example change mode to video: http://10.5.5.9/gp/gpControl/command/mode?p=0
-		// Settings: http://HOST/gp/gpControl/setting/SETTING/option
+		// Settings: http://HOST/gp/gpControl/setting/option
 		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
 
 		_url = "http://" + _host + "/gp/gpControl/";
@@ -47,7 +47,7 @@ GoProControl::GoProControl(WiFiClient client, const String ssid, const String pw
 
 uint8_t GoProControl::begin()
 {
-	if (getStatus()) // already connected
+	if (checkConnection())
 	{
 		if (_debug)
 		{
@@ -82,7 +82,7 @@ uint8_t GoProControl::begin()
 	{
 		if (_debug)
 		{
-			_debug_port->print("Connected");
+			_debug_port->println("Connected");
 		}
 		_connected = true;
 		return true;
@@ -91,7 +91,7 @@ uint8_t GoProControl::begin()
 	{
 		if (_debug)
 		{
-			_debug_port->print("Connection failed");
+			_debug_port->println("Connection failed");
 		}
 		_connected = false;
 		return -2;
@@ -107,6 +107,15 @@ uint8_t GoProControl::begin()
 
 void GoProControl::end()
 {
+	if (!checkConnection())
+	{
+		return;
+	}
+
+	if (_debug)
+	{
+		_debug_port->println("Closing connection");
+	}
 	_client.stop();
 	WiFi.disconnect();
 	_connected = false;
@@ -114,7 +123,7 @@ void GoProControl::end()
 
 uint8_t GoProControl::keepAlive()
 {
-	if (!getStatus()) // camera not connected
+	if (!checkConnection()) // camera not connected
 	{
 		return false;
 	}
@@ -129,30 +138,21 @@ uint8_t GoProControl::keepAlive()
 		{
 			_debug_port->println("Keeping connection alive");
 		}
-		confirmPairing();
+		//confirmPairing(); todo not working
 	}
-}
-
-void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
-{
-	byte preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-	byte i;
-	IPAddress addr(255, 255, 255, 255);
-	udp.begin(9);
-	udp.beginPacket(addr, 9); //sending packet at 9,
-
-	udp.write(preamble, sizeof preamble);
-
-	for (i = 0; i < 16; i++)
-	{
-		udp.write(mac, size_of_mac);
-	}
-	udp.endPacket();
-	delay(2000);
 }
 
 uint8_t GoProControl::confirmPairing()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -161,6 +161,7 @@ uint8_t GoProControl::confirmPairing()
 	}
 	else if (_camera >= HERO4)
 	{
+		//todo get deviceName
 		request = _url + "command/wireless/pair/complete?success=1&deviceName=ESPBoard";
 	}
 
@@ -169,6 +170,24 @@ uint8_t GoProControl::confirmPairing()
 
 uint8_t GoProControl::turnOn()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (isOn()) // camera is on
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn off the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -177,8 +196,9 @@ uint8_t GoProControl::turnOn()
 	}
 	else if (_camera >= HERO4)
 	{
-		//todo
-		//send Wake-On-LAN command
+		// todo
+		//sendWoL();
+		return true;
 	}
 
 	return sendRequest(request);
@@ -186,6 +206,24 @@ uint8_t GoProControl::turnOn()
 
 uint8_t GoProControl::turnOff()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -200,8 +238,52 @@ uint8_t GoProControl::turnOff()
 	return sendRequest(request);
 }
 
+uint8_t GoProControl::isOn()
+{
+	// does this command exist?
+	return true;
+}
+
+uint8_t GoProControl::checkConnection()
+{
+	if (getStatus())
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connected");
+		}
+		return true;
+	}
+	else
+	{
+		if (_debug)
+		{
+			_debug_port->println("Not connected");
+		}
+		return false;
+	}
+}
+
 uint8_t GoProControl::shoot()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -218,6 +300,24 @@ uint8_t GoProControl::shoot()
 
 uint8_t GoProControl::stopShoot()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -238,6 +338,24 @@ uint8_t GoProControl::stopShoot()
 
 uint8_t GoProControl::setMode(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -297,6 +415,24 @@ uint8_t GoProControl::setMode(const uint8_t option)
 
 uint8_t GoProControl::setOrientation(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -347,6 +483,24 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
 
 uint8_t GoProControl::setVideoResolution(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -420,6 +574,24 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
 
 uint8_t GoProControl::setVideoFov(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -472,6 +644,24 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
 
 uint8_t GoProControl::setFrameRate(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -569,6 +759,24 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
 
 uint8_t GoProControl::setVideoEncoding(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -616,6 +824,24 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
 
 uint8_t GoProControl::setPhotoResolution(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 	String parameter;
 
@@ -677,6 +903,24 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
 
 uint8_t GoProControl::setTimeLapseInterval(float option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	if (option != 0.5 || option != 1 || option != 5 || option != 10 || option != 30 || option != 60)
 	{
 		if (_debug)
@@ -760,6 +1004,24 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 
 uint8_t GoProControl::setContinuousShot(const uint8_t option)
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	if (option != 0 || option != 3 || option != 5 || option != 10)
 	{
 		if (_debug)
@@ -809,6 +1071,24 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 
 uint8_t GoProControl::localizationOn()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+	/*
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+*/
 	String request;
 
 	if (_camera == HERO3)
@@ -825,6 +1105,25 @@ uint8_t GoProControl::localizationOn()
 
 uint8_t GoProControl::localizationOff()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+	//todo test to turn it on and off with the camera off
+	/*
+	if (!isOn()) // camera is off 
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}*/
+
 	String request;
 
 	if (_camera == HERO3)
@@ -841,6 +1140,24 @@ uint8_t GoProControl::localizationOff()
 
 uint8_t GoProControl::deleteLast()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -857,6 +1174,24 @@ uint8_t GoProControl::deleteLast()
 
 uint8_t GoProControl::deleteAll()
 {
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	if (!isOn()) // camera is off
+	{
+		if (_debug)
+		{
+			_debug_port->println("turn on the camera first");
+		}
+		return false;
+	}
+
 	String request;
 
 	if (_camera == HERO3)
@@ -929,19 +1264,59 @@ uint8_t GoProControl::sendRequest(const String request)
 
 	if (_debug)
 	{
-		_debug_port->println("Request: " + request);
-		_debug_port->print("Status code: ");
-		_debug_port->println(response);
+		_debug_port->println("My request: " + request);
 		_debug_port->print("Response: ");
-		_debug_port->println(_http.responseBody());
+		_debug_port->println(response);
 	}
 
 	if (response == 200)
 	{
+		if (_debug)
+		{
+			_debug_port->println("Command: Accepted");
+		}
 		return true;
+	}
+	else if (response == 403)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Command: Wrong password");
+		}
+		return -1;
+	}
+	else if (response == 410)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Command: Failed");
+		}
+		return -2;
 	}
 	else
 	{
-		return -1;
+		if (_debug)
+		{
+			_debug_port->println("Command: Unknown error");
+		}
+		return -3;
 	}
+}
+
+void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
+{
+	byte preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	byte i;
+	IPAddress addr(255, 255, 255, 255);
+	udp.begin(9);
+	udp.beginPacket(addr, 9); //sending packet at 9,
+
+	udp.write(preamble, sizeof preamble);
+
+	for (i = 0; i < 16; i++)
+	{
+		udp.write(mac, size_of_mac);
+	}
+	udp.endPacket();
+	delay(2000);
 }
