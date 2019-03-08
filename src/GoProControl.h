@@ -39,14 +39,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 class GoProControl
 {
   public:
-	GoProControl(WiFiClient client, const String ssid, const String pwd, const uint8_t camera);
+	// constructors
+	GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera);																			// for HERO3 or older
+	GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera, WiFiUDP udp_client, const uint8_t mac_address[6], const String board_name); // for HERO4 or newer
+
+	// Comunication
 	uint8_t begin();
 	void end();
 	uint8_t keepAlive();
-	uint8_t confirmPairing();
 
+// BLE functions are availables only on ESP32
 #if defined(ARDUINO_ARCH_ESP32)
-	// none of these function will work, I am adding these for a future release
+	// none of these function will work, I am adding these for a proof of concept
 	// https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#bluetooth-pairing
 	uint8_t enableBLE();
 	uint8_t disableBLE();
@@ -54,11 +58,11 @@ class GoProControl
 	uint8_t wifiOn();
 #endif
 
-	// on/off
+	// Control
 	uint8_t turnOn();
 	uint8_t turnOff();
 	uint8_t isOn();
-	uint8_t checkConnection();
+	uint8_t checkConnection(const uint8_t silent = false); // maybe move to private
 
 	// Shoot
 	uint8_t shoot();
@@ -91,18 +95,19 @@ class GoProControl
 	uint8_t getStatus();
 	void printStatus();
 
-	// to move as private
-	static void sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac);
-
   private:
-	WiFiClient _client;
+	WiFiClient _wifi_client;
 	const String _host = "10.5.5.9";
 	const uint16_t _port = 80;
-	HttpClient _http = HttpClient(_client, _host, _port);
+	HttpClient _http = HttpClient(_wifi_client, _host, _port);
 
 	String _ssid;
 	String _pwd;
 	uint8_t _camera;
+
+	WiFiUDP _udp_client;
+	uint8_t _mac_address[6];
+	String _board_name;
 
 	String _url;
 	uint8_t WIFI_MODE = true;
@@ -114,10 +119,14 @@ class GoProControl
 	HardwareSerial *_debug_port;
 	uint8_t _debug;
 
+	void sendWoL();
 	uint8_t sendRequest(const String request);
+	uint8_t sendHTTPRequest(const String request);
 #if defined(ARDUINO_ARCH_ESP32)
 	uint8_t sendBLERequest(const uint8_t request[]);
 #endif
+	uint8_t connectClient();
+	uint8_t confirmPairing();
 };
 
 #endif //GOPRO_CONTROL_H

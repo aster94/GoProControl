@@ -19,9 +19,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include <GoProControl.h>
 
-GoProControl::GoProControl(WiFiClient client, const String ssid, const String pwd, const uint8_t camera)
+////////////////////////////////////////////////////////////
+////////                Constructors                ////////
+////////////////////////////////////////////////////////////
+
+GoProControl::GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera)
 {
-	_client = client;
+	_wifi_client = wifi_client;
 	_ssid = ssid;
 	_pwd = pwd;
 	_camera = camera;
@@ -44,6 +48,18 @@ GoProControl::GoProControl(WiFiClient client, const String ssid, const String pw
 		_url = "http://" + _host + "/gp/gpControl/";
 	}
 }
+
+GoProControl::GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera, WiFiUDP udp_client, const uint8_t mac_address[6], const String board_name)
+{
+	GoProControl(wifi_client, ssid, pwd, camera);
+	_udp_client = udp_client;
+	memcpy(_mac_address, mac_address, sizeof(mac_address));
+	_board_name = board_name;
+}
+
+////////////////////////////////////////////////////////////
+////////               Communication               /////////
+////////////////////////////////////////////////////////////
 
 uint8_t GoProControl::begin()
 {
@@ -71,38 +87,49 @@ uint8_t GoProControl::begin()
 		_debug_port->println("using password: " + _pwd);
 	}
 
-	WiFi.begin(_ssid.c_str(), _pwd.c_str());
-
-	while (WiFi.status() == WL_IDLE_STATUS)
-	{
-		;
-	}
-
-	if (WiFi.status() == WL_CONNECTED)
+	uint8_t attempt = 1;
+	while (attempt <= 3) // try three times
 	{
 		if (_debug)
 		{
-			_debug_port->println("Connected");
+			_debug_port->print("Attempt: ");
+			_debug_port->println(attempt);
 		}
-		_connected = true;
-		return true;
-	}
-	else if (WiFi.status() == WL_CONNECT_FAILED)
-	{
-		if (_debug)
+
+		WiFi.begin(_ssid.c_str(), _pwd.c_str());
+
+		while (WiFi.status() == WL_IDLE_STATUS)
 		{
-			_debug_port->println("Connection failed");
+			;
 		}
-		_connected = false;
-		return -2;
+
+		if (WiFi.status() == WL_CONNECTED)
+		{
+			if (_debug)
+			{
+				_debug_port->println("Connected to GoPro");
+			}
+			_connected = true;
+			return true;
+		}
+		else if (WiFi.status() == WL_CONNECT_FAILED)
+		{
+			if (_debug)
+			{
+				_debug_port->println("Connection failed");
+			}
+			_connected = false;
+		}
+		else
+		{
+			_debug_port->print("WiFi.status(): ");
+			_debug_port->println(WiFi.status());
+			_connected = false;
+		}
+		attempt++;
+		delay(200);
 	}
-	else
-	{
-		_debug_port->print("WiFi.status(): ");
-		_debug_port->println(WiFi.status());
-		_connected = false;
-		return false;
-	}
+	return -(WiFi.status());
 }
 
 void GoProControl::end()
@@ -116,14 +143,14 @@ void GoProControl::end()
 	{
 		_debug_port->println("Closing connection");
 	}
-	_client.stop();
+	_wifi_client.stop();
 	WiFi.disconnect();
 	_connected = false;
 }
 
 uint8_t GoProControl::keepAlive()
 {
-	if (!checkConnection()) // camera not connected
+	if (!checkConnection(true)) // camera not connected
 	{
 		return false;
 	}
@@ -134,39 +161,26 @@ uint8_t GoProControl::keepAlive()
 	}
 	else // time to ask something to the camera
 	{
-		if (_debug)
+		if (_camera == HERO3)
 		{
-			_debug_port->println("Keeping connection alive");
+			// not really needed since the connection won't be closed by the camera (tested 6 minutes)
+			return true;
 		}
-		//confirmPairing(); todo not working
+		else if (_camera >= HERO4)
+		{
+			if (_debug)
+			{
+				_debug_port->println("Keeping connection alive");
+			}
+			sendRequest("_GPHD_:0:0:2:0.000000\n");
+			// should it answer?
+		}
 	}
 }
 
-uint8_t GoProControl::confirmPairing()
-{
-	if (!checkConnection()) // not connected
-	{
-		if (_debug)
-		{
-			_debug_port->println("Connect the camera first");
-		}
-		return false;
-	}
-
-	String request;
-
-	if (_camera == HERO3)
-	{
-		request = _url + "DL?t=" + _pwd;
-	}
-	else if (_camera >= HERO4)
-	{
-		//todo get deviceName
-		request = _url + "command/wireless/pair/complete?success=1&deviceName=ESPBoard";
-	}
-
-	return sendRequest(request);
-}
+////////////////////////////////////////////////////////////
+////////                    BLE                    /////////
+////////////////////////////////////////////////////////////
 
 #if defined(ARDUINO_ARCH_ESP32)
 // none of these function will work, I am adding these for a future release
@@ -236,6 +250,10 @@ uint8_t GoProControl::wifiOn()
 }
 #endif
 
+////////////////////////////////////////////////////////////
+////////                  Control                  /////////
+////////////////////////////////////////////////////////////
+
 uint8_t GoProControl::turnOn()
 {
 	if (!checkConnection()) // not connected
@@ -247,13 +265,16 @@ uint8_t GoProControl::turnOn()
 		return false;
 	}
 
-	if (isOn()) // camera is on
+	if (_camera >= HERO4) // avoid this check in older cameras
 	{
-		if (_debug)
+		if (isOn()) // camera is already on
 		{
-			_debug_port->println("turn off the camera first");
+			if (_debug)
+			{
+				_debug_port->println("Camera is already on");
+			}
+			return false;
 		}
-		return false;
 	}
 
 	String request;
@@ -264,12 +285,11 @@ uint8_t GoProControl::turnOn()
 	}
 	else if (_camera >= HERO4)
 	{
-		// todo
-		//sendWoL();
+		sendWoL();
 		return true;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::turnOff()
@@ -283,13 +303,16 @@ uint8_t GoProControl::turnOff()
 		return false;
 	}
 
-	if (!isOn()) // camera is off
+	if (_camera >= HERO4) // avoid this check in older cameras
 	{
-		if (_debug)
+		if (!isOn()) // camera is already off
 		{
-			_debug_port->println("turn on the camera first");
+			if (_debug)
+			{
+				_debug_port->println("Camera is already off");
+			}
+			return false;
 		}
-		return false;
 	}
 
 	String request;
@@ -303,34 +326,58 @@ uint8_t GoProControl::turnOff()
 		request = _url + "command/system/sleep";
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::isOn()
 {
-	// does this command exist?
-	return true;
-}
-
-uint8_t GoProControl::checkConnection()
-{
-	if (getStatus())
+	if (!checkConnection(true)) // not connected
 	{
 		if (_debug)
 		{
-			_debug_port->println("Connected");
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	String request;
+
+	if (_camera == HERO3)
+	{
+		// this isn't supported by this camera so this function will always return true
+		return true;
+	}
+	else if (_camera >= HERO4)
+	{
+		request = _url + "status";
+	}
+
+	return sendHTTPRequest(request);
+}
+
+uint8_t GoProControl::checkConnection(const uint8_t silent)
+{
+	if (getStatus())
+	{
+		if (_debug && silent == false)
+		{
+			_debug_port->println("\nCamera connected");
 		}
 		return true;
 	}
 	else
 	{
-		if (_debug)
+		if (_debug && silent == false)
 		{
-			_debug_port->println("Not connected");
+			_debug_port->println("\nNot connected");
 		}
 		return false;
 	}
 }
+
+////////////////////////////////////////////////////////////
+////////                   Shoot                   /////////
+////////////////////////////////////////////////////////////
 
 uint8_t GoProControl::shoot()
 {
@@ -365,7 +412,7 @@ uint8_t GoProControl::shoot()
 			request = _url + "command/shutter?p=1";
 		}
 
-		return sendRequest(request);
+		return sendHTTPRequest(request);
 	}
 	else // BLE
 	{
@@ -406,7 +453,7 @@ uint8_t GoProControl::stopShoot()
 			request = _url + "command/shutter?p=0";
 		}
 
-		return sendRequest(request);
+		return sendHTTPRequest(request);
 	}
 	else // BLE
 	{
@@ -494,7 +541,7 @@ uint8_t GoProControl::setMode(const uint8_t option)
 			request = _url + "command/mode?p=" + parameter;
 		}
 
-		return sendRequest(request);
+		return sendHTTPRequest(request);
 	}
 	else // BLE
 	{
@@ -577,7 +624,7 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
 		request = _url + "setting/52/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -672,7 +719,7 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
 		request = _url + "setting/2/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::setVideoFov(const uint8_t option)
@@ -742,7 +789,7 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
 		request = _url + "setting/4/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::setFrameRate(const uint8_t option)
@@ -857,7 +904,7 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
 		request = _url + "setting/3/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::setVideoEncoding(const uint8_t option)
@@ -918,7 +965,7 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
 		request = _url + "setting/57/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1001,7 +1048,7 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
 		request = _url + "setting/17/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::setTimeLapseInterval(float option)
@@ -1024,7 +1071,14 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 		return false;
 	}
 
-	if (option != 0.5 || option != 1 || option != 5 || option != 10 || option != 30 || option != 60)
+	// convert float to integer
+	if (option == 0.5)
+	{
+		option = 0;
+	}
+	const uint8_t i_option = (int)option;
+
+	if (i_option != 0 || i_option != 1 || i_option != 5 || i_option != 10 || i_option != 30 || i_option != 60)
 	{
 		if (_debug)
 		{
@@ -1036,16 +1090,9 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 	String request;
 	String parameter;
 
-	// float cannot be used in switch statements
-	if (option == 0.5)
-	{
-		option = 0;
-	}
-	const uint8_t integer_option = (int)option;
-
 	if (_camera == HERO3)
 	{
-		switch (integer_option)
+		switch (i_option)
 		{
 		case 60:
 			parameter = "3c";
@@ -1074,7 +1121,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 	}
 	else if (_camera >= HERO4)
 	{
-		switch (integer_option)
+		switch (i_option)
 		{
 		case 60:
 			parameter = "6";
@@ -1102,7 +1149,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 		request = _url + "setting/5/" + parameter;
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::setContinuousShot(const uint8_t option)
@@ -1125,7 +1172,10 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 		return false;
 	}
 
-	if (option != 0 || option != 3 || option != 5 || option != 10)
+	// convert float to integer
+	const uint8_t i_option = (int)option;
+
+	if (i_option != 0 || i_option != 3 || i_option != 5 || i_option != 10)
 	{
 		if (_debug)
 		{
@@ -1165,7 +1215,7 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 		// Not supported in Hero4/5/6/7
 		return false;
 	}
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1182,7 +1232,7 @@ uint8_t GoProControl::localizationOn()
 		}
 		return false;
 	}
-	/*
+
 	if (!isOn()) // camera is off
 	{
 		if (_debug)
@@ -1191,7 +1241,7 @@ uint8_t GoProControl::localizationOn()
 		}
 		return false;
 	}
-*/
+
 	String request;
 
 	if (_camera == HERO3)
@@ -1203,7 +1253,7 @@ uint8_t GoProControl::localizationOn()
 		request = _url + "command/system/locate?p=1";
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::localizationOff()
@@ -1217,15 +1267,15 @@ uint8_t GoProControl::localizationOff()
 		return false;
 	}
 	//todo test to turn it on and off with the camera off
-	/*
-	if (!isOn()) // camera is off 
+
+	if (!isOn()) // camera is off
 	{
 		if (_debug)
 		{
 			_debug_port->println("turn on the camera first");
 		}
 		return false;
-	}*/
+	}
 
 	String request;
 
@@ -1238,7 +1288,7 @@ uint8_t GoProControl::localizationOff()
 		request = _url + "command/system/locate?p=0";
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::deleteLast()
@@ -1272,7 +1322,7 @@ uint8_t GoProControl::deleteLast()
 		request = _url + "command/storage/delete/last";
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 uint8_t GoProControl::deleteAll()
@@ -1306,7 +1356,7 @@ uint8_t GoProControl::deleteAll()
 		request = _url + "command/command/storage/delete/all";
 	}
 
-	return sendRequest(request);
+	return sendHTTPRequest(request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1333,41 +1383,74 @@ uint8_t GoProControl::getStatus()
 
 void GoProControl::printStatus()
 {
-	_debug_port->print("\nSSID: ");
-	_debug_port->println(WiFi.SSID());
-	_debug_port->print("IP Address: ");
-	_debug_port->println(WiFi.localIP());
-	_debug_port->print("signal strength (RSSI):");
-	_debug_port->print(WiFi.RSSI());
-	_debug_port->println(" dBm\n");
-	//WiFi.BSSID(bssid);
-	//todo add more info like mode (photo, video), fow and so on
+	if (_debug)
+	{
+		_debug_port->print("\nSSID: ");
+		_debug_port->println(WiFi.SSID());
+		_debug_port->print("IP Address: ");
+		_debug_port->println(WiFi.localIP());
+		_debug_port->print("signal strength (RSSI):");
+		_debug_port->print(WiFi.RSSI());
+		_debug_port->println(" dBm\n");
+		//WiFi.BSSID(bssid); WiFi.macAddress();
+		//todo add more info like mode (photo, video), fow and so on
+		// convert this output in a human readable https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes
+	}
 }
 
 ////////////////////////////////////////////////////////////
-////////               Communication               /////////
+////////                  Private                  /////////
 ////////////////////////////////////////////////////////////
+
+void GoProControl::sendWoL()
+{
+	uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	IPAddress addr(255, 255, 255, 255);
+
+	_udp_client.begin(9);
+	_udp_client.beginPacket(addr, 9); //sending packet at 9,
+
+	_udp_client.write(preamble, sizeof preamble);
+
+	for (uint8_t i = 0; i < 16; i++)
+	{
+		_udp_client.write(_mac_address, 6);
+	}
+	_udp_client.endPacket();
+	delay(2000);
+}
 
 uint8_t GoProControl::sendRequest(const String request)
 {
-	//_client.stop(); //is it needed?
-	if (!_client.connect(_host.c_str(), _port))
+	if (!connectClient())
 	{
-		if (_debug)
-		{
-			_debug_port->println("Connection lost");
-		}
-		_connected = false;
+		return false;
+	}
+
+	if (_debug)
+	{
+		_debug_port->println("Request: " + request);
+	}
+	_wifi_client.println(request);
+	_wifi_client.stop();
+}
+
+uint8_t GoProControl::sendHTTPRequest(const String request)
+{
+	if (!connectClient())
+	{
 		return false;
 	}
 
 	_http.get(request);
 	uint16_t response = _http.responseStatusCode();
-	_last_request = millis();
+
+	_http.stop();
+	_wifi_client.stop();
 
 	if (_debug)
 	{
-		_debug_port->println("My request: " + request);
+		_debug_port->println("HTTP request: " + request);
 		_debug_port->print("Response: ");
 		_debug_port->println(response);
 	}
@@ -1406,26 +1489,69 @@ uint8_t GoProControl::sendRequest(const String request)
 	}
 }
 
-void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
-{
-	byte preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-	byte i;
-	IPAddress addr(255, 255, 255, 255);
-	udp.begin(9);
-	udp.beginPacket(addr, 9); //sending packet at 9,
-
-	udp.write(preamble, sizeof preamble);
-
-	for (i = 0; i < 16; i++)
-	{
-		udp.write(mac, size_of_mac);
-	}
-	udp.endPacket();
-	delay(2000);
-}
-
 #if defined(ARDUINO_ARCH_ESP32)
 uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 {
+	_debug_port->println("BLE request:");
+	for (uint8_t i = 0; i <= 3; i++)
+	{
+		_debug_port->println(request[i]);
+	}
 }
 #endif
+
+uint8_t GoProControl::connectClient()
+{
+	if (!_wifi_client.connect(_host.c_str(), _port))
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connection lost");
+		}
+		_connected = false;
+		return false;
+	}
+	else
+	{
+		if (_debug)
+		{
+			_debug_port->println("Client connected");
+		}
+		_last_request = millis();
+		return true;
+	}
+}
+
+uint8_t GoProControl::confirmPairing()
+{
+	if (!checkConnection()) // not connected
+	{
+		if (_debug)
+		{
+			_debug_port->println("Connect the camera first");
+		}
+		return false;
+	}
+
+	String request;
+
+	if (_camera == HERO3)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Not supported");
+		}
+		return false;
+	}
+	else if (_camera == HERO4)
+	{
+		// https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing
+		// todo
+	}
+	else if (_camera >= HERO5)
+	{
+		request = _url + "command/wireless/pair/complete?success=1&deviceName=" + _board_name;
+	}
+
+	return sendHTTPRequest(request);
+}
