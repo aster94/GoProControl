@@ -25,13 +25,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <WiFiUdp.h>
 #include <Settings.h>
 
-
+// to remove
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <ESP8266WiFi.h>
 #elif defined(ARDUINO_ARCH_ESP32)
 #include <WiFi.h>
 #endif
 
+#if defined(ARDUINO_ARCH_ESP32)
+// include BLE library
+#endif
 
 class GoProControl
 {
@@ -41,6 +44,15 @@ class GoProControl
 	void end();
 	uint8_t keepAlive();
 	uint8_t confirmPairing();
+
+#if defined(ARDUINO_ARCH_ESP32)
+	// none of these function will work, I am adding these for a future release
+	// https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#bluetooth-pairing
+	uint8_t enableBLE();
+	uint8_t disableBLE();
+	uint8_t wifiOff();
+	uint8_t wifiOn();
+#endif
 
 	// on/off
 	uint8_t turnOn();
@@ -93,6 +105,8 @@ class GoProControl
 	uint8_t _camera;
 
 	String _url;
+	uint8_t WIFI_MODE = true;
+	uint8_t BLE_ENABLED = false;
 
 	uint8_t _connected = false;
 	uint64_t _last_request;
@@ -101,7 +115,9 @@ class GoProControl
 	uint8_t _debug;
 
 	uint8_t sendRequest(const String request);
-	
+#if defined(ARDUINO_ARCH_ESP32)
+	uint8_t sendBLERequest(const uint8_t request[]);
+#endif
 };
 
 #endif //GOPRO_CONTROL_H

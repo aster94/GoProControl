@@ -168,6 +168,74 @@ uint8_t GoProControl::confirmPairing()
 	return sendRequest(request);
 }
 
+#if defined(ARDUINO_ARCH_ESP32)
+// none of these function will work, I am adding these for a future release
+// https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#bluetooth-pairing
+uint8_t GoProControl::enableBLE()
+{
+	if (_camera <= HERO3)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Your camera doesn't have Bluetooth");
+		}
+		return false;
+	}
+	BLE_ENABLED = true;
+}
+
+uint8_t GoProControl::disableBLE()
+{
+	if (_camera <= HERO3)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Your camera doesn't have Bluetooth");
+		}
+		return false;
+	}
+	BLE_ENABLED = false;
+}
+
+uint8_t GoProControl::wifiOff()
+{
+	if (_camera <= HERO3)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Your camera doesn't have Bluetooth");
+		}
+		return false;
+	}
+
+	if (BLE_ENABLED == false) // prevent stupid error like turn off the wifi while we didn't connected to the BL yet
+	{
+		if (_debug)
+		{
+			_debug_port->println("First run enableBLE()");
+		}
+		return false;
+	}
+
+	WIFI_MODE = false;
+	sendBLERequest(BLE_WiFiOff);
+}
+
+uint8_t GoProControl::wifiOn()
+{
+	if (_camera <= HERO3)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Your camera doesn't have Bluetooth");
+		}
+		return false;
+	}
+	WIFI_MODE = true;
+	sendBLERequest(BLE_WiFiOn);
+}
+#endif
+
 uint8_t GoProControl::turnOn()
 {
 	if (!checkConnection()) // not connected
@@ -284,18 +352,25 @@ uint8_t GoProControl::shoot()
 		return false;
 	}
 
-	String request;
-
-	if (_camera == HERO3)
+	if (WIFI_MODE)
 	{
-		request = _url + "SH?t=" + _pwd + "&p=%01";
-	}
-	else if (_camera >= HERO4)
-	{
-		request = _url + "command/shutter?p=1";
-	}
+		String request;
 
-	return sendRequest(request);
+		if (_camera == HERO3)
+		{
+			request = _url + "SH?t=" + _pwd + "&p=%01";
+		}
+		else if (_camera >= HERO4)
+		{
+			request = _url + "command/shutter?p=1";
+		}
+
+		return sendRequest(request);
+	}
+	else // BLE
+	{
+		sendBLERequest(BLE_RecordStart);
+	}
 }
 
 uint8_t GoProControl::stopShoot()
@@ -318,18 +393,25 @@ uint8_t GoProControl::stopShoot()
 		return false;
 	}
 
-	String request;
-
-	if (_camera == HERO3)
+	if (WIFI_MODE)
 	{
-		request = _url + "SH?t=" + _pwd + "&p=%00";
-	}
-	else if (_camera >= HERO4)
-	{
-		request = _url + "command/shutter?p=0";
-	}
+		String request;
 
-	return sendRequest(request);
+		if (_camera == HERO3)
+		{
+			request = _url + "SH?t=" + _pwd + "&p=%00";
+		}
+		else if (_camera >= HERO4)
+		{
+			request = _url + "command/shutter?p=0";
+		}
+
+		return sendRequest(request);
+	}
+	else // BLE
+	{
+		sendBLERequest(BLE_RecordStop);
+	}
 }
 
 ////////////////////////////////////////////////////////////
@@ -356,61 +438,82 @@ uint8_t GoProControl::setMode(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
-	if (_camera == HERO3)
+	if (WIFI_MODE)
 	{
-		switch (option)
+		String request;
+		String parameter;
+
+		if (_camera == HERO3)
 		{
-		case VIDEO_MODE:
-			parameter = "00";
-			break;
-		case PHOTO_MODE:
-			parameter = "01";
-			break;
-		case BURST_MODE:
-			parameter = "02";
-			break;
-		case TIMELAPSE_MODE:
-			parameter = "03";
-			break;
-		case TIMER_MODE:
-			parameter = "04";
-			break;
-		case PLAY_HDMI_MODE:
-			parameter = "05";
-			break;
-		default:
-			_debug_port->println("Wrong parameter for setMode");
-			return -1;
+			switch (option)
+			{
+			case VIDEO_MODE:
+				parameter = "00";
+				break;
+			case PHOTO_MODE:
+				parameter = "01";
+				break;
+			case BURST_MODE:
+				parameter = "02";
+				break;
+			case TIMELAPSE_MODE:
+				parameter = "03";
+				break;
+			case TIMER_MODE:
+				parameter = "04";
+				break;
+			case PLAY_HDMI_MODE:
+				parameter = "05";
+				break;
+			default:
+				_debug_port->println("Wrong parameter for setMode");
+				return -1;
+			}
+
+			request = _url + "CM?t=" + _pwd + "&p=%" + parameter;
+		}
+		else if (_camera >= HERO4)
+		{
+			//todo: add sub-modes
+			switch (option)
+			{
+			case VIDEO_MODE:
+				parameter = "0";
+				break;
+			case PHOTO_MODE:
+				parameter = "1";
+				break;
+			case MULTISHOT_MODE:
+				parameter = "2";
+				break;
+			default:
+				_debug_port->println("Wrong parameter for setMode");
+				return -1;
+			}
+
+			request = _url + "command/mode?p=" + parameter;
 		}
 
-		request = _url + "CM?t=" + _pwd + "&p=%" + parameter;
+		return sendRequest(request);
 	}
-	else if (_camera >= HERO4)
+	else // BLE
 	{
-		//todo: add sub-modes
 		switch (option)
 		{
 		case VIDEO_MODE:
-			parameter = "0";
+			sendBLERequest(BLE_ModeVideo);
 			break;
 		case PHOTO_MODE:
-			parameter = "1";
+			sendBLERequest(BLE_ModePhoto);
 			break;
 		case MULTISHOT_MODE:
-			parameter = "2";
+			sendBLERequest(BLE_ModeMultiShot);
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setMode");
 			return -1;
 		}
-
-		request = _url + "command/mode?p=" + parameter;
 	}
-
-	return sendRequest(request);
 }
 
 uint8_t GoProControl::setOrientation(const uint8_t option)
@@ -1320,3 +1423,9 @@ void GoProControl::sendWoL(WiFiUDP udp, byte *mac, size_t size_of_mac)
 	udp.endPacket();
 	delay(2000);
 }
+
+#if defined(ARDUINO_ARCH_ESP32)
+uint8_t GoProControl::sendBLERequest(const uint8_t request[])
+{
+}
+#endif

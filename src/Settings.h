@@ -123,3 +123,13 @@ enum photo_resolution
     PR_5MP_MEDIUM,
     photo_resolution_last
 };
+
+#if defined(ARDUINO_ARCH_ESP32)
+const uint8_t BLE_WiFiOn[] = {17, 01, 01};
+const uint8_t BLE_WiFiOff[] = {17, 01, 00};
+const uint8_t BLE_RecordStart[] = {01, 01, 01};
+const uint8_t BLE_RecordStop[] = {01, 01, 00};
+const uint8_t BLE_ModeVideo[] = {02, 01, 00};
+const uint8_t BLE_ModePhoto[] = {02, 01, 01};
+const uint8_t BLE_ModeMultiShot[] = {02, 01, 02};
+#endif
