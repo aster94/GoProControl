@@ -1,28 +1,24 @@
 #include <GoProControl.h>
 #include <WiFi.h>
 #include "Constants.h"
-
 WiFiClient gopro_client;
-GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA);
+WiFiUDP udp_client;
 
-uint8_t onStatus = true;
-char in = 0;
+//GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
+GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA, udp_client, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
 
 void setup()
 {
   gp.enableDebug(&Serial);
-  gp.begin();
-
   xTaskCreate(keep_alive, "keep_alive", 10000, NULL, 1, NULL);
 }
 
 void loop()
 {
-  delay(1000);
+  // do stuff
 }
 
 void keep_alive(void *parameter)
 {
   gp.keepAlive();
-  delay(1000);
 }

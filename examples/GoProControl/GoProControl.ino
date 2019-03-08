@@ -1,21 +1,17 @@
 #include <GoProControl.h>
 #include <WiFi.h>
 #include "Constants.h"
-
 WiFiClient gopro_client;
-GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA);
+WiFiUDP udp_client;
 
-uint8_t onStatus = true;
+GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
+//GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA, udp_client, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
+
 char in = 0;
-
-byte macAddr[] = {0x06, 0x41, 0x69, 0x91, 0x08, 0xBA};
-
-WiFiUDP udp;
 
 void setup()
 {
   gp.enableDebug(&Serial);
-  udp.begin(9);
 }
 
 void loop()
@@ -28,115 +24,101 @@ void loop()
 
   switch (in)
   {
-  default:
-    break;
-
-  //connect
-  case 'C':
-    Serial.println("trying connection");
-    gp.begin();
-
-    break;
-
-  //turn on/off
-  case 'T':
-    Serial.print("turn ");
-    onStatus = !onStatus;
-    if (onStatus)
-    {
-      Serial.println("on");
-      if (gp.turnOn())
-        Serial.println("did");
-    }
-    else
-    {
-      Serial.println("off");
-      if (gp.turnOff())
-        Serial.println("did");
-    }
-    break;
-
-  //start/stop capture
-  case 'A':
-    Serial.print("shoot");
-    if (gp.shoot())
-    {
-      Serial.println("did");
-    }
-    break;
-
-  case 'S':
-    Serial.println("stop");
-    if (gp.stopShoot())
+    default:
       break;
 
-  //set mode
-  case 'V':
-    gp.setMode(VIDEO_MODE);
-    break;
+    // connect
+    case 'C':
+      gp.begin();
+      break;
 
-  case 'P':
-    gp.setMode(PHOTO_MODE);
-    break;
+    // turn on/off
+    case 'T':
+      gp.turnOn();
+      break;
 
-  case 'M':
-    gp.setMode(MULTISHOT_MODE);
-    break;
+    case 't':
+      gp.turnOff();
+      break;
 
-  case 'U':
-    gp.setOrientation(ORIENTATION_UP);
-    break;
+    // take a picture of start a video
+    case 'A':
+      gp.shoot();
+      break;
 
-  case 'W':
-    gp.setVideoFov(MEDIUM_FOV);
-    break;
+    // stop the video
+    case 'S':
+      gp.stopShoot();
+      break;
 
-  case 'E':
-    gp.setFrameRate(FR_120);
-    break;
+    //set modes
+    case 'V':
+      gp.setMode(VIDEO_MODE);
+      break;
 
-  case 'f':
-    gp.setPhotoResolution(PR_11MP_WIDE);
-    break;
+    case 'P':
+      gp.setMode(PHOTO_MODE);
+      break;
 
-  case 'F':
-    gp.setVideoResolution(VR_1080p);
-    break;
+    case 'M':
+      gp.setMode(MULTISHOT_MODE);
+      break;
 
-  case 'L':
-    gp.setTimeLapseInterval(60);
-    break;
+    // set orientation
+    case 'u':
+      gp.setOrientation(ORIENTATION_UP);
+      break;
 
-  case 'O':
-    gp.localizationOn();
-    break;
+    case 'd':
+      gp.setOrientation(ORIENTATION_DOWN);
+      break;
 
-  case 'I':
-    gp.localizationOff();
-    break;
+    case 'W':
+      gp.setVideoFov(MEDIUM_FOV);
+      break;
 
-  case 'd':
-    gp.deleteLast();
-    break;
+    case 'E':
+      gp.setFrameRate(FR_120);
+      break;
 
-  case 'D':
-    gp.deleteAll();
-    break;
+    case 'f':
+      gp.setPhotoResolution(PR_11MP_WIDE);
+      break;
 
-  case 'p':
-    gp.confirmPairing();
-    break;
+    case 'F':
+      gp.setVideoResolution(VR_1080p);
+      break;
 
-  case 'X':
-    gp.end();
-    break;
+    case 'L':
+      gp.setTimeLapseInterval(60);
+      break;
 
-  case 'z':
-    gp.sendWoL(udp, macAddr, sizeof macAddr);
-    break;
+    case 'O':
+      gp.localizationOn();
+      break;
+
+    case 'I':
+      gp.localizationOff();
+      break;
+
+    case 'l':
+      gp.deleteLast();
+      break;
+
+    case 'D':
+      gp.deleteAll();
+      break;
+
+    case 'X':
+      gp.end();
+      break;
+
+    case 'z':
+      // test functions
+      break;
   }
 
   in = 0;
   delay(100);
-  //gp.keepAlive();
+  gp.keepAlive();
 }
