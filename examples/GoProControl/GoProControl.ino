@@ -1,11 +1,9 @@
 #include <GoProControl.h>
-#include <WiFi.h>
 #include "Constants.h"
-WiFiClient gopro_client;
-WiFiUDP udp_client;
 
-GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
-//GoProControl gp(gopro_client, GOPRO_SSID, GOPRO_PASS, CAMERA, udp_client, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
+// Choose your camera
+//GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
+//GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
 
 char in = 0;
 
@@ -24,98 +22,98 @@ void loop()
 
   switch (in)
   {
-    default:
-      break;
+  default:
+    break;
 
-    // connect
-    case 'C':
-      gp.begin();
-      break;
+  // connect
+  case 'C':
+    gp.begin();
+    break;
 
-    // turn on/off
-    case 'T':
-      gp.turnOn();
-      break;
+  // turn on/off
+  case 'T':
+    gp.turnOn();
+    break;
 
-    case 't':
-      gp.turnOff();
-      break;
+  case 't':
+    gp.turnOff();
+    break;
 
-    // take a picture of start a video
-    case 'A':
-      gp.shoot();
-      break;
+  // take a picture of start a video
+  case 'A':
+    gp.shoot();
+    break;
 
-    // stop the video
-    case 'S':
-      gp.stopShoot();
-      break;
+  // stop the video
+  case 'S':
+    gp.stopShoot();
+    break;
 
-    //set modes
-    case 'V':
-      gp.setMode(VIDEO_MODE);
-      break;
+  //set modes
+  case 'V':
+    gp.setMode(VIDEO_MODE);
+    break;
 
-    case 'P':
-      gp.setMode(PHOTO_MODE);
-      break;
+  case 'P':
+    gp.setMode(PHOTO_MODE);
+    break;
 
-    case 'M':
-      gp.setMode(MULTISHOT_MODE);
-      break;
+  case 'M':
+    gp.setMode(MULTISHOT_MODE);
+    break;
 
-    // set orientation
-    case 'u':
-      gp.setOrientation(ORIENTATION_UP);
-      break;
+  // set orientation
+  case 'u':
+    gp.setOrientation(ORIENTATION_UP);
+    break;
 
-    case 'd':
-      gp.setOrientation(ORIENTATION_DOWN);
-      break;
+  case 'd':
+    gp.setOrientation(ORIENTATION_DOWN);
+    break;
 
-    case 'W':
-      gp.setVideoFov(MEDIUM_FOV);
-      break;
+  case 'W':
+    gp.setVideoFov(MEDIUM_FOV);
+    break;
 
-    case 'E':
-      gp.setFrameRate(FR_120);
-      break;
+  case 'E':
+    gp.setFrameRate(FR_120);
+    break;
 
-    case 'f':
-      gp.setPhotoResolution(PR_11MP_WIDE);
-      break;
+  case 'f':
+    gp.setPhotoResolution(PR_11MP_WIDE);
+    break;
 
-    case 'F':
-      gp.setVideoResolution(VR_1080p);
-      break;
+  case 'F':
+    gp.setVideoResolution(VR_1080p);
+    break;
 
-    case 'L':
-      gp.setTimeLapseInterval(60);
-      break;
+  case 'L':
+    gp.setTimeLapseInterval(60);
+    break;
 
-    case 'O':
-      gp.localizationOn();
-      break;
+  case 'O':
+    gp.localizationOn();
+    break;
 
-    case 'I':
-      gp.localizationOff();
-      break;
+  case 'I':
+    gp.localizationOff();
+    break;
 
-    case 'l':
-      gp.deleteLast();
-      break;
+  case 'l':
+    gp.deleteLast();
+    break;
 
-    case 'D':
-      gp.deleteAll();
-      break;
+  case 'D':
+    gp.deleteAll();
+    break;
 
-    case 'X':
-      gp.end();
-      break;
+  case 'X':
+    gp.end();
+    break;
 
-    case 'z':
-      // test functions
-      break;
+  case 'z':
+    // test functions
+    break;
   }
 
   in = 0;

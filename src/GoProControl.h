@@ -22,26 +22,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include <Arduino.h>
 #include <ArduinoHttpClient.h>
-#include <WiFiUdp.h>
 #include <Settings.h>
 
-// to remove
-#if defined(ARDUINO_ARCH_ESP8266)
+// include the correct wifi library
+#if defined(ARDUINO_ARCH_ESP8266) // ESP8266
 #include <ESP8266WiFi.h>
-#elif defined(ARDUINO_ARCH_ESP32)
+#include <WiFiUdp.h>
+#elif defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
+#include <WiFiUdp.h>
+// todo include BLE library
+#elif defined(ARDUINO_SAMD_MKR1000) // MKR1000
+#define HardwareSerial Serial_
+#include <WiFi101.h>
+#include <WiFiUdp.h>
+#elif defined(ARDUINO_SAMD_MKRWIFI1010) // MKR WiFi 1010
+#define HardwareSerial Serial_
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
+#elif defined(ARDUINO_SAMD_MKRVIDOR4000) // MKR VIDOR 4000
+#define HardwareSerial Serial_
+#include <VidorPeripherals.h>
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
+#elif defined(ARDUINO_AVR_UNO_WIFI_REV2) // UNO WiFi Rev.2
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
+#else // any board (like arduino UNO) without wifi + ESP01 with AT commands
+#include <WiFiEsp.h>
+#include <WiFiEspUdp.h>
+#define WiFiClient WiFiEspClient
+#define WiFiUDP WiFiEspUDP
+#warning "Are you using an ESP01 + AT commands? if not open an issue on github: https://github.com/aster94/GoProControl"
 #endif
 
-#if defined(ARDUINO_ARCH_ESP32)
-// include BLE library
-#endif
 
 class GoProControl
 {
   public:
 	// constructors
-	GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera);																			// for HERO3 or older
-	GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera, WiFiUDP udp_client, const uint8_t mac_address[6], const String board_name); // for HERO4 or newer
+	GoProControl(const String ssid, const String pwd, const uint8_t camera);														// for HERO3 or older
+	GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name); // for HERO4 or newer
 
 	// Comunication
 	uint8_t begin();
@@ -98,8 +119,9 @@ class GoProControl
   private:
 	WiFiClient _wifi_client;
 	const String _host = "10.5.5.9";
-	const uint16_t _port = 80;
-	HttpClient _http = HttpClient(_wifi_client, _host, _port);
+	const uint16_t _wifi_port = 80;
+	const uint8_t _udp_port = 9;
+	HttpClient _http = HttpClient(_wifi_client, _host, _wifi_port);
 
 	String _ssid;
 	String _pwd;

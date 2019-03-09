@@ -23,9 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 ////////                Constructors                ////////
 ////////////////////////////////////////////////////////////
 
-GoProControl::GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera)
+GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera)
 {
-	_wifi_client = wifi_client;
 	_ssid = ssid;
 	_pwd = pwd;
 	_camera = camera;
@@ -49,10 +48,9 @@ GoProControl::GoProControl(WiFiClient wifi_client, const String ssid, const Stri
 	}
 }
 
-GoProControl::GoProControl(WiFiClient wifi_client, const String ssid, const String pwd, const uint8_t camera, WiFiUDP udp_client, const uint8_t mac_address[6], const String board_name)
+GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name)
 {
-	GoProControl(wifi_client, ssid, pwd, camera);
-	_udp_client = udp_client;
+	GoProControl(ssid, pwd, camera);
 	memcpy(_mac_address, mac_address, sizeof(mac_address));
 	_board_name = board_name;
 }
@@ -416,7 +414,9 @@ uint8_t GoProControl::shoot()
 	}
 	else // BLE
 	{
+#if defined(ARDUINO_ARCH_ESP32)
 		sendBLERequest(BLE_RecordStart);
+#endif
 	}
 }
 
@@ -457,7 +457,9 @@ uint8_t GoProControl::stopShoot()
 	}
 	else // BLE
 	{
+#if defined(ARDUINO_ARCH_ESP32)
 		sendBLERequest(BLE_RecordStop);
+#endif
 	}
 }
 
@@ -545,6 +547,7 @@ uint8_t GoProControl::setMode(const uint8_t option)
 	}
 	else // BLE
 	{
+#if defined(ARDUINO_ARCH_ESP32)
 		switch (option)
 		{
 		case VIDEO_MODE:
@@ -560,6 +563,7 @@ uint8_t GoProControl::setMode(const uint8_t option)
 			_debug_port->println("Wrong parameter for setMode");
 			return -1;
 		}
+#endif
 	}
 }
 
@@ -1407,8 +1411,8 @@ void GoProControl::sendWoL()
 	uint8_t preamble[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 	IPAddress addr(255, 255, 255, 255);
 
-	_udp_client.begin(9);
-	_udp_client.beginPacket(addr, 9); //sending packet at 9,
+	_udp_client.begin(_udp_port);
+	_udp_client.beginPacket(addr, _udp_port);
 
 	_udp_client.write(preamble, sizeof preamble);
 
@@ -1502,7 +1506,7 @@ uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 
 uint8_t GoProControl::connectClient()
 {
-	if (!_wifi_client.connect(_host.c_str(), _port))
+	if (!_wifi_client.connect(_host.c_str(), _wifi_port))
 	{
 		if (_debug)
 		{
