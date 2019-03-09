@@ -26,37 +26,43 @@ Have you ever thought about the possibility to control your action camera with y
 
 ## Supported boards:
 
-- ESP8266
 - ESP32
-- ~~any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using AT commands with [this library](https://github.com/bportaluri/WiFiEsp)~~ - removed for now
-- offical Arduino boards with Wifi like the MKR series - todo
+- ESP8266
+- MKR1000
+- MKR WiFi 1010
+- MKR VIDOR 4000
+- UNO WiFi Rev.2
+- Arduino UNO
+- any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using AT commands with [this library](https://github.com/bportaluri/WiFiEsp)
+
 
 ## Supported cameras:
 
-- HERO3+
+- HERO3
 - HERO4
-- HERO5 (tested with Black)
-- HERO6 Black
-- HERO7 Black
+- HERO5
+- HERO6
+- HERO7
 - Fusion
 
-I made the library with a style which would be quite easy to add other cameras (not only gopro). I would be very happy to accept pull requests 😃
+I made the library with a style which would be quite easy to add other cameras (not only GoPro). I would be very happy to accept pull requests 😃
 
 ## Installation
 
-- Using Arduino IDE:
+- Arduino IDE:
 	- Go to Tools > Manage libraries 
-	- Search for GoProControl
-- Using PlatformIO for Visual Studio Code:
-	- ````pio lib install "GoProControl"````
+	- Search for `GoProControl`
+- PlatformIO:
+	- From command line: run ```pio lib install "GoProControl"```
+	- Or if you prefer a GUI from [Platformio IDE](https://docs.platformio.org/en/latest/librarymanager/)
 - Manually:
-	- ````cd $HOME/Arduino/libraries```` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
-	- ````git clone https://github.com/aster94/GoProControl.git````
+	- ```cd $HOME/Arduino/libraries``` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
+	- ```git clone https://github.com/aster94/GoProControl.git```
 	- Restart Arduino IDE
 
 ## Examples
 
-**Important:** Don't forget to change the SSID and Password on the example code! To do so, edit the Constants.h file (Constants.h.example should be renamed to Constants.h) in the example folder. Also change camera type (HERO3, HERO4, HERO5, HERO6...)
+**Important:** Rename the `Constants.h.example` to `Constants.h` and change the SSID, Password and camera model. If you have a GoPro HERO4 or newer you should add also the [mac address](https://havecamerawilltravel.com/gopro/gopro-mac-address/) and the hostname of the board you want to connect to your camera
 
 ## Supported Options
 

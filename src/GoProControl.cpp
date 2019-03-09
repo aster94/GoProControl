@@ -1080,7 +1080,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 	{
 		option = 0;
 	}
-	const uint8_t i_option = (int)option;
+	const uint8_t i_option = (uint8_t)option;
 
 	if (i_option != 0 || i_option != 1 || i_option != 5 || i_option != 10 || i_option != 30 || i_option != 60)
 	{
@@ -1177,7 +1177,7 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 	}
 
 	// convert float to integer
-	const uint8_t i_option = (int)option;
+	const uint8_t i_option = (uint8_t)option;
 
 	if (i_option != 0 || i_option != 3 || i_option != 5 || i_option != 10)
 	{
@@ -1421,6 +1421,7 @@ void GoProControl::sendWoL()
 		_udp_client.write(_mac_address, 6);
 	}
 	_udp_client.endPacket();
+	_udp_client.stop();
 	delay(2000);
 }
 
