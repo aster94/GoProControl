@@ -62,7 +62,7 @@ class GoProControl
   public:
 	// constructors
 	GoProControl(const String ssid, const String pwd, const uint8_t camera);														// for HERO3 or older
-	GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name); // for HERO4 or newer
+	GoProControl(const String ssid, const String pwd, const uint8_t camera, const byte mac_address[], const String board_name); // for HERO4 or newer
 
 	// Comunication
 	uint8_t begin();

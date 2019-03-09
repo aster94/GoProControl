@@ -48,9 +48,29 @@ GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t ca
 	}
 }
 
-GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name)
+GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const byte mac_address[], const String board_name)
 {
-	GoProControl(ssid, pwd, camera);
+	_ssid = ssid;
+	_pwd = pwd;
+	_camera = camera;
+
+	if (_camera == HERO3) // HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
+	{
+		// URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
+		// example:	  http://10.5.5.9/camera/SH?t=password&p=%01
+
+		_url = "http://" + _host + "/camera/";
+	}
+	else if (_camera >= HERO4) // HERO4, 5, 6, 7:
+	{
+		// URL scheme: http://HOST/gp/gpControl/....
+		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION
+		// example change mode to video: http://10.5.5.9/gp/gpControl/command/mode?p=0
+		// Settings: http://HOST/gp/gpControl/setting/option
+		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
+
+		_url = "http://" + _host + "/gp/gpControl/";
+	}
 	memcpy(_mac_address, mac_address, sizeof(mac_address));
 	_board_name = board_name;
 }
