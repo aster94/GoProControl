@@ -29,21 +29,6 @@ GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t ca
 	_ssid = ssid;
 	_pwd = pwd;
 	_camera = camera;
-
-	if (_camera == HERO3) // HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
-	{
-		// URL scheme: /PARAM1/PARAM2?t=PASSWORD&p=%OPTION
-		// example:	  /camera/SH?t=password&p=%01
-		// as PARAM1 sometimes is needed camera for other function bacpac
-	}
-	else if (_camera >= HERO4) // HERO4, 5, 6, 7:
-	{
-		// URL scheme: /gp/gpControl/....
-		// Basic functions (record, mode, tag, poweroff): /gp/gpControl/command/PARAM?p=OPTION
-		// example change mode to video: http://10.5.5.9/gp/gpControl/command/mode?p=0
-		// Settings: /gp/gpControl/setting/option
-		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
-	}
 }
 
 GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[], const String board_name)
