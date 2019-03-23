@@ -18,6 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 
 #include <GoProControl.h>
+#define LEN(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
 ////////////////////////////////////////////////////////////
 ////////                Constructors                ////////
@@ -31,27 +32,24 @@ GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t ca
 
 	if (_camera == HERO3) // HERO3, HERO3+, HERO3BLACK, HERO3BLACK+
 	{
-		// URL scheme: http://HOST/param1/PARAM2?t=PASSWORD&p=%OPTION
-		// example:	  http://10.5.5.9/camera/SH?t=password&p=%01
-
-		_url = "http://" + _host + "/camera/";
+		// URL scheme: /PARAM1/PARAM2?t=PASSWORD&p=%OPTION
+		// example:	  /camera/SH?t=password&p=%01
+		// as PARAM1 sometimes is needed camera for other function bacpac
 	}
 	else if (_camera >= HERO4) // HERO4, 5, 6, 7:
 	{
-		// URL scheme: http://HOST/gp/gpControl/....
-		// Basic functions (record, mode, tag, poweroff): http://HOST/gp/gpControl/command/PARAM?p=OPTION
+		// URL scheme: /gp/gpControl/....
+		// Basic functions (record, mode, tag, poweroff): /gp/gpControl/command/PARAM?p=OPTION
 		// example change mode to video: http://10.5.5.9/gp/gpControl/command/mode?p=0
-		// Settings: http://HOST/gp/gpControl/setting/option
+		// Settings: /gp/gpControl/setting/option
 		// example change video resolution to 1080p: http://10.5.5.9/gp/gpControl/setting/2/9)
-
-		_url = "http://" + _host + "/gp/gpControl/";
 	}
 }
 
-GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name)
+GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[], const String board_name)
+	: GoProControl(ssid, pwd, camera)
 {
-	GoProControl(ssid, pwd, camera);
-	memcpy(_mac_address, mac_address, sizeof(mac_address));
+	memcpy(_mac_address, mac_address, LEN(_mac_address));
 	_board_name = board_name;
 }
 
@@ -85,48 +83,29 @@ uint8_t GoProControl::begin()
 		_debug_port->println("using password: " + _pwd);
 	}
 
-	uint8_t attempt = 1;
-	while (attempt <= 3) // try three times
+	WiFi.begin(_ssid.c_str(), _pwd.c_str());
+
+	while (WiFi.status() == WL_IDLE_STATUS)
+	{
+		;
+	}
+
+	if (WiFi.status() == WL_CONNECTED)
 	{
 		if (_debug)
 		{
-			_debug_port->print("Attempt: ");
-			_debug_port->println(attempt);
+			_debug_port->println("Connected to GoPro");
 		}
-
-		WiFi.begin(_ssid.c_str(), _pwd.c_str());
-
-		while (WiFi.status() == WL_IDLE_STATUS)
-		{
-			;
-		}
-
-		if (WiFi.status() == WL_CONNECTED)
-		{
-			if (_debug)
-			{
-				_debug_port->println("Connected to GoPro");
-			}
-			_connected = true;
-			return true;
-		}
-		else if (WiFi.status() == WL_CONNECT_FAILED)
-		{
-			if (_debug)
-			{
-				_debug_port->println("Connection failed");
-			}
-			_connected = false;
-		}
-		else
-		{
-			_debug_port->print("WiFi.status(): ");
-			_debug_port->println(WiFi.status());
-			_connected = false;
-		}
-		attempt++;
-		delay(200);
+		_connected = true;
+		return true;
 	}
+	else
+	{
+		_debug_port->print("Connection failed with status: ");
+		_debug_port->println(WiFi.status());
+		_connected = false;
+	}
+
 	return -(WiFi.status());
 }
 
@@ -141,6 +120,7 @@ void GoProControl::end()
 	{
 		_debug_port->println("Closing connection");
 	}
+	_udp_client.stop();
 	_wifi_client.stop();
 	WiFi.disconnect();
 	_connected = false;
@@ -161,7 +141,7 @@ uint8_t GoProControl::keepAlive()
 	{
 		if (_camera == HERO3)
 		{
-			// not really needed since the connection won't be closed by the camera (tested 6 minutes)
+			// not needed since the connection won't be closed by the camera (tested 6 minutes)
 			return true;
 		}
 		else if (_camera >= HERO4)
@@ -275,11 +255,9 @@ uint8_t GoProControl::turnOn()
 		}
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "PW?t=" + _pwd + "&p=%01";
+		_request = "/bacpac/PW?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= HERO4)
 	{
@@ -287,7 +265,7 @@ uint8_t GoProControl::turnOn()
 		return true;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::turnOff()
@@ -313,18 +291,16 @@ uint8_t GoProControl::turnOff()
 		}
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "PW?t=" + _pwd + "&p=%00";
+		_request = "/bacpac/PW?t=" + _pwd + "&p=%00";
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "command/system/sleep";
+		_request = "/gp/gpControl/command/system/sleep";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::isOn()
@@ -338,8 +314,6 @@ uint8_t GoProControl::isOn()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
 		// this isn't supported by this camera so this function will always return true
@@ -347,15 +321,15 @@ uint8_t GoProControl::isOn()
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "status";
+		_request = "/gp/gpControl/status";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
-uint8_t GoProControl::checkConnection(const uint8_t silent)
+uint8_t GoProControl::checkConnection(const bool silent)
 {
-	if (getStatus())
+	if (_connected == true)
 	{
 		if (_debug && silent == false)
 		{
@@ -399,23 +373,28 @@ uint8_t GoProControl::shoot()
 
 	if (WIFI_MODE)
 	{
-		String request;
 
 		if (_camera == HERO3)
 		{
-			request = _url + "SH?t=" + _pwd + "&p=%01";
+			_request = "/camera/SH?t=" + _pwd + "&p=%01";
 		}
 		else if (_camera >= HERO4)
 		{
-			request = _url + "command/shutter?p=1";
+			_request = "/gp/gpControl/command/shutter?p=1";
 		}
 
-		return sendHTTPRequest(request);
+		return sendHTTPRequest(_request);
 	}
 	else // BLE
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		sendBLERequest(BLE_RecordStart);
+#else
+		if (_debug)
+		{
+			_debug_port->println("This shoudln't be run");
+		}
+		return -1;
 #endif
 	}
 }
@@ -442,23 +421,28 @@ uint8_t GoProControl::stopShoot()
 
 	if (WIFI_MODE)
 	{
-		String request;
 
 		if (_camera == HERO3)
 		{
-			request = _url + "SH?t=" + _pwd + "&p=%00";
+			_request = "/camera/SH?t=" + _pwd + "&p=%00";
 		}
 		else if (_camera >= HERO4)
 		{
-			request = _url + "command/shutter?p=0";
+			_request = "/gp/gpControl/command/shutter?p=0";
 		}
 
-		return sendHTTPRequest(request);
+		return sendHTTPRequest(_request);
 	}
 	else // BLE
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		sendBLERequest(BLE_RecordStop);
+#else
+		if (_debug)
+		{
+			_debug_port->println("This shoudln't be run");
+		}
+		return -1;
 #endif
 	}
 }
@@ -489,61 +473,59 @@ uint8_t GoProControl::setMode(const uint8_t option)
 
 	if (WIFI_MODE)
 	{
-		String request;
-		String parameter;
 
 		if (_camera == HERO3)
 		{
 			switch (option)
 			{
 			case VIDEO_MODE:
-				parameter = "00";
+				_parameter = "00";
 				break;
 			case PHOTO_MODE:
-				parameter = "01";
+				_parameter = "01";
 				break;
 			case BURST_MODE:
-				parameter = "02";
+				_parameter = "02";
 				break;
 			case TIMELAPSE_MODE:
-				parameter = "03";
+				_parameter = "03";
 				break;
 			case TIMER_MODE:
-				parameter = "04";
+				_parameter = "04";
 				break;
 			case PLAY_HDMI_MODE:
-				parameter = "05";
+				_parameter = "05";
 				break;
 			default:
 				_debug_port->println("Wrong parameter for setMode");
 				return -1;
 			}
 
-			request = _url + "CM?t=" + _pwd + "&p=%" + parameter;
+			_request = "camera/CM?t=" + _pwd + "&p=%" + _parameter;
 		}
 		else if (_camera >= HERO4)
 		{
-			//todo: add sub-modes
+			// todo: add sub-modes
 			switch (option)
 			{
 			case VIDEO_MODE:
-				parameter = "0";
+				_parameter = "0";
 				break;
 			case PHOTO_MODE:
-				parameter = "1";
+				_parameter = "1";
 				break;
 			case MULTISHOT_MODE:
-				parameter = "2";
+				_parameter = "2";
 				break;
 			default:
 				_debug_port->println("Wrong parameter for setMode");
 				return -1;
 			}
 
-			request = _url + "command/mode?p=" + parameter;
+			_request = "/gp/gpControl/command/mode?p=" + _parameter;
 		}
 
-		return sendHTTPRequest(request);
+		return sendHTTPRequest(_request);
 	}
 	else // BLE
 	{
@@ -563,6 +545,12 @@ uint8_t GoProControl::setMode(const uint8_t option)
 			_debug_port->println("Wrong parameter for setMode");
 			return -1;
 		}
+#else
+		if (_debug)
+		{
+			_debug_port->println("This shoudln't be run");
+		}
+		return -1;
 #endif
 	}
 }
@@ -587,48 +575,45 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case ORIENTATION_UP:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		case ORIENTATION_DOWN:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setOrientation");
 			return -1;
 		}
 
-		request = _url + "UP?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/UP?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case ORIENTATION_UP:
-			parameter = "0";
+			_parameter = "0";
 			break;
 		case ORIENTATION_DOWN:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case ORIENTATION_AUTO:
-			parameter = "2";
+			_parameter = "2";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setOrientation");
 			return -1;
 		}
 
-		request = _url + "setting/52/" + parameter;
+		_request = "/gp/gpControl/setting/52/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -655,75 +640,72 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case VR_1080p:
-			parameter = "06";
+			_parameter = "06";
 			break;
 		case VR_960p:
-			parameter = "05";
+			_parameter = "05";
 			break;
 		case VR_720p:
-			parameter = "03";
+			_parameter = "03";
 			break;
 		case VR_WVGA:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoResolution");
 			return -1;
 		}
 
-		request = _url + "VR?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/VR?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case VR_4K:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case VR_2K:
-			parameter = "4";
+			_parameter = "4";
 			break;
 		case VR_2K_SuperView:
-			parameter = "5";
+			_parameter = "5";
 			break;
 		case VR_1440p:
-			parameter = "7";
+			_parameter = "7";
 			break;
 		case VR_1080p_SuperView:
-			parameter = "8";
+			_parameter = "8";
 			break;
 		case VR_1080p:
-			parameter = "9";
+			_parameter = "9";
 			break;
 		case VR_960p:
-			parameter = "10";
+			_parameter = "10";
 			break;
 		case VR_720p_SuperView:
-			parameter = "11";
+			_parameter = "11";
 			break;
 		case VR_720p:
-			parameter = "12";
+			_parameter = "12";
 			break;
 		case VR_WVGA:
-			parameter = "13";
+			_parameter = "13";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoResolution");
 			return -1;
 		}
 
-		request = _url + "setting/2/" + parameter;
+		_request = "/gp/gpControl/setting/2/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setVideoFov(const uint8_t option)
@@ -746,54 +728,51 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case WIDE_FOV:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		case MEDIUM_FOV:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		case NARROW_FOV:
-			parameter = "02";
+			_parameter = "02";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoFov");
 			return -1;
 		}
 
-		request = _url + "FV?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/FV?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case WIDE_FOV:
-			parameter = "0";
+			_parameter = "0";
 			break;
 		case MEDIUM_FOV:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case NARROW_FOV:
-			parameter = "2";
+			_parameter = "2";
 			break;
 		case LINEAR_FOV:
-			parameter = "4";
+			_parameter = "4";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoFov");
 			return -1;
 		}
 
-		request = _url + "setting/4/" + parameter;
+		_request = "/gp/gpControl/setting/4/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setFrameRate(const uint8_t option)
@@ -816,99 +795,96 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case FR_240:
-			parameter = "0a";
+			_parameter = "0a";
 			break;
 		case FR_120:
-			parameter = "09";
+			_parameter = "09";
 			break;
 		case FR_100:
-			parameter = "08";
+			_parameter = "08";
 			break;
 		case FR_60:
-			parameter = "07";
+			_parameter = "07";
 			break;
 		case FR_50:
-			parameter = "06";
+			_parameter = "06";
 			break;
 		case FR_48:
-			parameter = "05";
+			_parameter = "05";
 			break;
 		case FR_30:
-			parameter = "04";
+			_parameter = "04";
 			break;
 		case FR_25:
-			parameter = "03";
+			_parameter = "03";
 			break;
 		case FR_24:
-			parameter = "02";
+			_parameter = "02";
 			break;
 		case FR_12p5:
-			parameter = "0b";
+			_parameter = "0b";
 			break;
 		case FR_15:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		case FR_12:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setFrameRate");
 			return -1;
 		}
 
-		request = _url + "FS?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/FS?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case FR_240:
-			parameter = "0";
+			_parameter = "0";
 			break;
 		case FR_120:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case FR_100:
-			parameter = "2";
+			_parameter = "2";
 			break;
 		case FR_90:
-			parameter = "3";
+			_parameter = "3";
 			break;
 		case FR_80:
-			parameter = "4";
+			_parameter = "4";
 			break;
 		case FR_60:
-			parameter = "5";
+			_parameter = "5";
 			break;
 		case FR_50:
-			parameter = "6";
+			_parameter = "6";
 			break;
 		case FR_48:
-			parameter = "7";
+			_parameter = "7";
 			break;
 		case FR_30:
-			parameter = "8";
+			_parameter = "8";
 			break;
 		case FR_25:
-			parameter = "9";
+			_parameter = "9";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setFrameRate");
 			return -1;
 		}
 
-		request = _url + "setting/3/" + parameter;
+		_request = "/gp/gpControl/setting/3/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setVideoEncoding(const uint8_t option)
@@ -931,45 +907,42 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case NTSC:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		case PAL:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoEncoding");
 			return -1;
 		}
 
-		request = _url + "VM?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/VM?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case NTSC:
-			parameter = "0";
+			_parameter = "0";
 			break;
 		case PAL:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setVideoEncoding");
 			return -1;
 		}
 
-		request = _url + "setting/57/" + parameter;
+		_request = "/gp/gpControl/setting/57/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -996,63 +969,60 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
 		return false;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case PR_11MP_WIDE:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		case PR_8MP_WIDE:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		case PR_5MP_WIDE:
-			parameter = "02";
+			_parameter = "02";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setPhotoResolution");
 			return -1;
 		}
 
-		request = _url + "PR?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/PR?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (option)
 		{
 		case PR_12MP_WIDE:
-			parameter = "0";
+			_parameter = "0";
 			break;
 		case PR_12MP_LINEAR:
-			parameter = "10";
+			_parameter = "10";
 			break;
 		case PR_12MP_MEDIUM:
-			parameter = "8";
+			_parameter = "8";
 			break;
 		case PR_12MP_NARROW:
-			parameter = "9";
+			_parameter = "9";
 			break;
 		case PR_7MP_WIDE:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case PR_7MP_MEDIUM:
-			parameter = "2";
+			_parameter = "2";
 			break;
 		case PR_5MP_WIDE:
-			parameter = "3";
+			_parameter = "3";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setPhotoResolution");
 			return -1;
 		}
 
-		request = _url + "setting/17/" + parameter;
+		_request = "/gp/gpControl/setting/17/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setTimeLapseInterval(float option)
@@ -1091,69 +1061,66 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
 		return -1;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (i_option)
 		{
 		case 60:
-			parameter = "3c";
+			_parameter = "3c";
 			break;
 		case 30:
-			parameter = "1e";
+			_parameter = "1e";
 			break;
 		case 10:
-			parameter = "0a";
+			_parameter = "0a";
 			break;
 		case 5:
-			parameter = "05";
+			_parameter = "05";
 			break;
 		case 1:
-			parameter = "01";
+			_parameter = "01";
 			break;
 		case 0: // 0.5
-			parameter = "00";
+			_parameter = "00";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setTimeLapseInterval");
 			return -1;
 		}
 
-		request = _url + "TI?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/TI?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		switch (i_option)
 		{
 		case 60:
-			parameter = "6";
+			_parameter = "6";
 			break;
 		case 30:
-			parameter = "5";
+			_parameter = "5";
 			break;
 		case 10:
-			parameter = "4";
+			_parameter = "4";
 			break;
 		case 5:
-			parameter = "3";
+			_parameter = "3";
 			break;
 		case 1:
-			parameter = "1";
+			_parameter = "1";
 			break;
 		case 0: // 0.5
-			parameter = "0";
+			_parameter = "0";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setTimeLapseInterval");
 			return -1;
 		}
 
-		request = _url + "setting/5/" + parameter;
+		_request = "/gp/gpControl/setting/5/" + _parameter;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setContinuousShot(const uint8_t option)
@@ -1188,38 +1155,35 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 		return -1;
 	}
 
-	String request;
-	String parameter;
-
 	if (_camera == HERO3)
 	{
 		switch (option)
 		{
 		case 10:
-			parameter = "0a";
+			_parameter = "0a";
 			break;
 		case 5:
-			parameter = "05";
+			_parameter = "05";
 			break;
 		case 3:
-			parameter = "03";
+			_parameter = "03";
 			break;
 		case 0:
-			parameter = "00";
+			_parameter = "00";
 			break;
 		default:
 			_debug_port->println("Wrong parameter for setContinuousShot");
 			return -1;
 		}
 
-		request = _url + "CS?t=" + _pwd + "&p=%" + parameter;
+		_request = "camera/CS?t=" + _pwd + "&p=%" + _parameter;
 	}
 	else if (_camera >= HERO4)
 	{
 		// Not supported in Hero4/5/6/7
 		return false;
 	}
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1246,18 +1210,16 @@ uint8_t GoProControl::localizationOn()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "LL?t=" + _pwd + "&p=%01";
+		_request = "bacpac/LL?t=" + _pwd + "&p=%01";
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "command/system/locate?p=1";
+		_request = "/gp/gpControl/command/system/locate?p=1";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::localizationOff()
@@ -1270,7 +1232,7 @@ uint8_t GoProControl::localizationOff()
 		}
 		return false;
 	}
-	//todo test to turn it on and off with the camera off
+	// todo test to turn it on and off with the camera off
 
 	if (!isOn()) // camera is off
 	{
@@ -1281,18 +1243,16 @@ uint8_t GoProControl::localizationOff()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "LL?t=" + _pwd + "&p=%00";
+		_request = "bacpac/LL?t=" + _pwd + "&p=%00";
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "command/system/locate?p=0";
+		_request = "/gp/gpControl/command/system/locate?p=0";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::deleteLast()
@@ -1315,18 +1275,16 @@ uint8_t GoProControl::deleteLast()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "DL?t=" + _pwd;
+		_request = "camera/DL?t=" + _pwd;
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "command/storage/delete/last";
+		_request = "/gp/gpControl/command/storage/delete/last";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 uint8_t GoProControl::deleteAll()
@@ -1349,25 +1307,23 @@ uint8_t GoProControl::deleteAll()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
-		request = _url + "DA?t=" + _pwd;
+		_request = "camera/DA?t=" + _pwd;
 	}
 	else if (_camera >= HERO4)
 	{
-		request = _url + "command/command/storage/delete/all";
+		_request = "/gp/gpControl/command/command/storage/delete/all";
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
 ////////                   Debug                   /////////
 ////////////////////////////////////////////////////////////
 
-void GoProControl::enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate)
+void GoProControl::enableDebug(UniversalSerial *debug_port, const uint32_t debug_baudrate)
 {
 	_debug = true;
 	_debug_port = debug_port;
@@ -1380,25 +1336,58 @@ void GoProControl::disableDebug()
 	_debug = false;
 }
 
-uint8_t GoProControl::getStatus()
-{
-	return _connected;
-}
-
 void GoProControl::printStatus()
 {
 	if (_debug)
 	{
-		_debug_port->print("\nSSID: ");
+		_debug_port->print("\nSSID:\t\t");
 		_debug_port->println(WiFi.SSID());
-		_debug_port->print("IP Address: ");
+		_debug_port->print("Password:\t");
+		_debug_port->println(_pwd);
+		_debug_port->print("Camera:\t\tHERO");
+		_debug_port->println(_camera);
+		_debug_port->print("IP Address:\t");
 		_debug_port->println(WiFi.localIP());
-		_debug_port->print("signal strength (RSSI):");
+		_debug_port->print("RSSI:\t\t");
 		_debug_port->print(WiFi.RSSI());
-		_debug_port->println(" dBm\n");
-		//WiFi.BSSID(bssid); WiFi.macAddress();
-		//todo add more info like mode (photo, video), fow and so on
+		_debug_port->println(" dBm");
+
+		uint8_t mac[6];
+		WiFi.macAddress(mac);
+		_debug_port->print("My MAC:\t\t");
+		_debug_port->print(mac[5], HEX);
+		_debug_port->print(":");
+		_debug_port->print(mac[4], HEX);
+		_debug_port->print(":");
+		_debug_port->print(mac[3], HEX);
+		_debug_port->print(":");
+		_debug_port->print(mac[2], HEX);
+		_debug_port->print(":");
+		_debug_port->print(mac[1], HEX);
+		_debug_port->print(":");
+		_debug_port->println(mac[0], HEX);
+
+		if (_camera >= HERO4)
+		{
+			_debug_port->print("GoPro MAC:\t");
+			//WiFi.BSSID(mac);
+			_debug_port->print(mac[5], HEX);
+			_debug_port->print(":");
+			_debug_port->print(mac[4], HEX);
+			_debug_port->print(":");
+			_debug_port->print(mac[3], HEX);
+			_debug_port->print(":");
+			_debug_port->print(mac[2], HEX);
+			_debug_port->print(":");
+			_debug_port->print(mac[1], HEX);
+			_debug_port->print(":");
+			_debug_port->println(mac[0], HEX);
+			_debug_port->print("Board Name:\t");
+			_debug_port->println(_board_name);
+		}
+		// todo add more info like mode (photo, video), fow and so on
 		// convert this output in a human readable https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes
+		_debug_port->println();
 	}
 }
 
@@ -1414,7 +1403,7 @@ void GoProControl::sendWoL()
 	_udp_client.begin(_udp_port);
 	_udp_client.beginPacket(addr, _udp_port);
 
-	_udp_client.write(preamble, sizeof preamble);
+	_udp_client.write(preamble, LEN(preamble));
 
 	for (uint8_t i = 0; i < 16; i++)
 	{
@@ -1447,18 +1436,25 @@ uint8_t GoProControl::sendHTTPRequest(const String request)
 		return false;
 	}
 
-	_http.get(request);
-	uint16_t response = _http.responseStatusCode();
-
-	_http.stop();
-	_wifi_client.stop();
-
 	if (_debug)
 	{
 		_debug_port->println("HTTP request: " + request);
-		_debug_port->print("Response: ");
-		_debug_port->println(response);
 	}
+
+	_wifi_client.println("GET " + request + " HTTP/1.1");
+	if (_camera == HERO3)
+	{
+		_wifi_client.println("Host: " + _host + ":" + _wifi_port);
+	}
+	else if (_camera >= HERO4)
+	{
+		_wifi_client.println("Host: " + _host);
+	}
+	_wifi_client.println("Connection: Keep-Alive");
+	_wifi_client.println();
+
+	uint16_t response = listenResponse();
+	_wifi_client.stop();
 
 	if (response == 200)
 	{
@@ -1468,13 +1464,19 @@ uint8_t GoProControl::sendHTTPRequest(const String request)
 		}
 		return true;
 	}
+	else if (response == 400)
+	{
+		if (_debug)
+		{
+			_debug_port->println("Command: Bad request");
+		}
+	}
 	else if (response == 403)
 	{
 		if (_debug)
 		{
 			_debug_port->println("Command: Wrong password");
 		}
-		return -1;
 	}
 	else if (response == 410)
 	{
@@ -1482,16 +1484,15 @@ uint8_t GoProControl::sendHTTPRequest(const String request)
 		{
 			_debug_port->println("Command: Failed");
 		}
-		return -2;
 	}
 	else
 	{
 		if (_debug)
 		{
-			_debug_port->println("Command: Unknown error");
+			_debug_port->println("Command: Other error");
 		}
-		return -3;
 	}
+	return -1;
 }
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -1538,8 +1539,6 @@ uint8_t GoProControl::confirmPairing()
 		return false;
 	}
 
-	String request;
-
 	if (_camera == HERO3)
 	{
 		if (_debug)
@@ -1552,11 +1551,65 @@ uint8_t GoProControl::confirmPairing()
 	{
 		// https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing
 		// todo
+		if (_debug)
+		{
+			_debug_port->println("not implemented yet");
+		}
 	}
 	else if (_camera >= HERO5)
 	{
-		request = _url + "command/wireless/pair/complete?success=1&deviceName=" + _board_name;
+		_request = "/gp/gpControl/command/wireless/pair/complete?success=1&deviceName=" + _board_name;
 	}
 
-	return sendHTTPRequest(request);
+	return sendHTTPRequest(_request);
+}
+
+uint16_t GoProControl::listenResponse(const bool only_first_line)
+{
+	memset(_response, 0, LEN(_response)); // empty _response
+	if (_wifi_client.available() == 0)
+	{
+		delay(5);
+	}
+	_wifi_client.readBytesUntil('\n', _response, 18);
+	if (_debug)
+	{
+		_debug_port->println("Response body start");
+		_debug_port->println(_response);
+	}
+
+	char incoming;
+	while (_wifi_client.available()) // empty the incoming buffer
+	{
+		incoming = _wifi_client.read();
+		if (only_first_line == false && _debug)
+		{
+			_debug_port->print(incoming);
+		}
+	}
+	if (_debug)
+	{
+		_debug_port->println("Response body end");
+	}
+
+	if (_response[0] == 0)
+	{
+		if (_debug)
+		{
+			_debug_port->println("empty response");
+		}
+		return -1;
+	}
+	// typical response: "HTTP/1.1 200 OK" we need to split it
+	char *token = strtok(_response, " "); // waste first part (HTTP/1.1) of the response
+	token = strtok(NULL, " ");			  // this is the response code
+	uint16_t code = atoi(token);		  // convert to integer
+
+	if (_debug)
+	{
+		_debug_port->print("Response code: ");
+		_debug_port->println(code);
+	}
+
+	return code;
 }

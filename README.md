@@ -32,7 +32,6 @@ Have you ever thought about the possibility to control your action camera with y
 - MKR WiFi 1010
 - MKR VIDOR 4000
 - UNO WiFi Rev.2
-- Arduino UNO
 - any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using AT commands with [this library](https://github.com/bportaluri/WiFiEsp)
 
 

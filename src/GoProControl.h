@@ -21,48 +21,50 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define GOPRO_CONTROL_H
 
 #include <Arduino.h>
-#include <ArduinoHttpClient.h>
 #include <Settings.h>
 
 // include the correct wifi library
 #if defined(ARDUINO_ARCH_ESP8266) // ESP8266
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
 #elif defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
-#include <WiFiUdp.h>
-// todo include BLE library
+// todo include BLE libraries
 #elif defined(ARDUINO_SAMD_MKR1000) // MKR1000
-#define HardwareSerial Serial_
 #include <WiFi101.h>
-#include <WiFiUdp.h>
 #elif defined(ARDUINO_SAMD_MKRWIFI1010) // MKR WiFi 1010
-#define HardwareSerial Serial_
 #include <WiFiNINA.h>
-#include <WiFiUdp.h>
 #elif defined(ARDUINO_SAMD_MKRVIDOR4000) // MKR VIDOR 4000
-#define HardwareSerial Serial_
 #include <VidorPeripherals.h>
 #include <WiFiNINA.h>
-#include <WiFiUdp.h>
 #elif defined(ARDUINO_AVR_UNO_WIFI_REV2) // UNO WiFi Rev.2
 #include <WiFiNINA.h>
-#include <WiFiUdp.h>
 #else // any board (like arduino UNO) without wifi + ESP01 with AT commands
 #include <WiFiEsp.h>
-#include <WiFiEspUdp.h>
-#define WiFiClient WiFiEspClient
-#define WiFiUDP WiFiEspUDP
+#define AT_COMMAND
 #warning "Are you using an ESP01 + AT commands? if not open an issue on github: https://github.com/aster94/GoProControl"
 #endif
 
+// include the UDP library to turn on and off HERO4 and newer camera
+#if not defined(AT_COMMAND)
+#include <WiFiUdp.h>
+#else
+#include <WiFiEspUdp.h>
+#define WiFiClient WiFiEspClient
+#endif
+
+// include the correct Serial class
+#if defined(ARDUINO_ARCH_SAMD)
+#define UniversalSerial Serial_
+#else
+#define UniversalSerial HardwareSerial
+#endif
 
 class GoProControl
 {
   public:
-	// constructors
-	GoProControl(const String ssid, const String pwd, const uint8_t camera);														// for HERO3 or older
-	GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[6], const String board_name); // for HERO4 or newer
+	// Constructors
+	GoProControl(const String ssid, const String pwd, const uint8_t camera);													   // for HERO3 or older
+	GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[], const String board_name); // for HERO4 or newer
 
 	// Comunication
 	uint8_t begin();
@@ -83,7 +85,7 @@ class GoProControl
 	uint8_t turnOn();
 	uint8_t turnOff();
 	uint8_t isOn();
-	uint8_t checkConnection(const uint8_t silent = false); // maybe move to private
+	uint8_t checkConnection(const bool silent = false);
 
 	// Shoot
 	uint8_t shoot();
@@ -111,35 +113,36 @@ class GoProControl
 	uint8_t deleteAll();
 
 	// Debug
-	void enableDebug(HardwareSerial *debug_port, const uint32_t debug_baudrate = 115200);
+	void enableDebug(UniversalSerial *debug_port, const uint32_t debug_baudrate = 115200);
 	void disableDebug();
-	uint8_t getStatus();
 	void printStatus();
 
   private:
 	WiFiClient _wifi_client;
+	WiFiUDP _udp_client;
 	const String _host = "10.5.5.9";
 	const uint16_t _wifi_port = 80;
 	const uint8_t _udp_port = 9;
-	HttpClient _http = HttpClient(_wifi_client, _host, _wifi_port);
 
 	String _ssid;
 	String _pwd;
 	uint8_t _camera;
 
-	WiFiUDP _udp_client;
+	String _request;
+	String _parameter;
+	char _response[20];
+
 	uint8_t _mac_address[6];
 	String _board_name;
 
-	String _url;
-	uint8_t WIFI_MODE = true;
-	uint8_t BLE_ENABLED = false;
+	bool WIFI_MODE = true;
+	bool BLE_ENABLED = false;
 
-	uint8_t _connected = false;
+	bool _connected = false;
 	uint64_t _last_request;
 
-	HardwareSerial *_debug_port;
-	uint8_t _debug;
+	UniversalSerial *_debug_port;
+	bool _debug;
 
 	void sendWoL();
 	uint8_t sendRequest(const String request);
@@ -149,6 +152,7 @@ class GoProControl
 #endif
 	uint8_t connectClient();
 	uint8_t confirmPairing();
+	uint16_t listenResponse(const bool only_first_line = true);
 };
 
 #endif //GOPRO_CONTROL_H

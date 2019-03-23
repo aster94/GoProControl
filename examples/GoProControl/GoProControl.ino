@@ -111,12 +111,11 @@ void loop()
     gp.end();
     break;
 
-  case 'z':
-    // test functions
+  case 'p':
+    gp.printStatus();
     break;
   }
 
   in = 0;
-  delay(100);
   gp.keepAlive();
 }
