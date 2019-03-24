@@ -1356,17 +1356,17 @@ void GoProControl::printStatus()
 		{
 			_debug_port->print("GoPro MAC:\t");
 			 uint8_t* gpMac = WiFi.BSSID();
-_debug_port->print(gpMac[5],HEX);
-_debug_port->print(":");
-_debug_port->print(gpMac[4],HEX);
-_debug_port->print(":");
-_debug_port->print(gpMac[3],HEX);
-_debug_port->print(":");
-_debug_port->print(gpMac[2],HEX);
-_debug_port->print(":");
-_debug_port->print(gpMac[1],HEX);
-_debug_port->print(":");
-_debug_port->println(gpMac[0],HEX);
+			_debug_port->print(gpMac[5],HEX);
+			_debug_port->print(":");
+			_debug_port->print(gpMac[4],HEX);
+			_debug_port->print(":");
+			_debug_port->print(gpMac[3],HEX);
+			_debug_port->print(":");
+			_debug_port->print(gpMac[2],HEX);
+			_debug_port->print(":");
+			_debug_port->print(gpMac[1],HEX);
+			_debug_port->print(":");
+			_debug_port->println(gpMac[0],HEX);
 			_debug_port->print("Board Name:\t");
 			_debug_port->println(_board_name);
 		}
