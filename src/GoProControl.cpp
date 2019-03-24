@@ -70,10 +70,10 @@ uint8_t GoProControl::begin()
 
 	WiFi.begin(_ssid.c_str(), _pwd.c_str());
 
-	while (WiFi.status() == WL_IDLE_STATUS)
-	{
-		;
-	}
+	while (WiFi.status() != WL_CONNECTED) {
+    	delay(1000);
+    	Serial.println("Connecting to WiFi..");
+  	}
 
 	if (WiFi.status() == WL_CONNECTED)
 	{

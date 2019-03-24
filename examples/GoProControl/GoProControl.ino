@@ -3,7 +3,7 @@
 
 // Choose your camera
 //GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
-//GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
+//GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME);
 
 char in = 0;
 
@@ -113,6 +113,10 @@ void loop()
 
   case 'p':
     gp.printStatus();
+    break;
+
+  case 'K':
+    gp.keepAlive();
     break;
   }
 
