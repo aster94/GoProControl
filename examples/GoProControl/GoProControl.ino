@@ -1,10 +1,9 @@
 #include <GoProControl.h>
 #include "Constants.h"
 
-uint8_t gopro_mac_address[6]= {1,2,3,4,5,6};
 // Choose your camera
 //GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
-GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME);
+//GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME); // use this if you have a HERO4 or newer
 
 char in = 0;
 
