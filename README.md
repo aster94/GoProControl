@@ -42,7 +42,7 @@ Have you ever thought about the possibility to control your action camera with y
 - HERO5
 - HERO6
 - HERO7
-- Fusion
+- FUSION
 
 I made the library with a style which would be quite easy to add other cameras (not only GoPro). I would be very happy to accept pull requests 😃
 
@@ -153,9 +153,21 @@ I made the library with a style which would be quite easy to add other cameras (
 | 3 | ✔ |  |
 | 0 | ✔ |  |
 
+**NOTE:** Not all the options are available for all the cameras (for example on a HERO3 you can't set 1080p at 240 frame per second 😲). You can see the possibilities on the manual of your camera of here for [HERO3](https://github.com/KonradIT/goprowifihack/blob/master/HERO3/Framerates-Resolutions.md) and here for [HERO4 and newer](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/Framerates-Resolutions.md)
+
+## To Do list and known issues 
+
+- Missing get status which gives info like mode (photo, video), fow and so on: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes)
+- Wait for the ESP32 core to make a stable BLE core, right now it has many issues, especially, if used together with wifi: [see here](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+ble)
+- No confirm pairing for HERO4: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing)
+- Missing some modes for HERO4 and newer camera: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#secondary-modes)
+- The arduino class String() could cause memory leaks (I never had problem yet), move to char array? 🤔
+- `BSSID()` and `macAddress()` not perfectly compatible with arduino API: [see here](https://github.com/espressif/arduino-esp32/issues/2613)
+- make gopro_mac_address field optional
+
 
 ## Reference
 
 All the commands came from: https://github.com/KonradIT/goprowifihack
 
-The idea cames from another gopro library: https://github.com/agdl/GoPRO which works only on arduino WiFi boards and only with gopro HERO3.
+The idea of making a GoPro library for arduino comes from another library https://github.com/agdl/GoPRO which works only on arduino WiFi boards and only with GoPro HERO3.

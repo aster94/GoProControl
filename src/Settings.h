@@ -17,7 +17,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define KEEP_ALIVE 3000
+#define KEEP_ALIVE 1500
+#define MAX_WAIT_TIME 2000
 
 enum camera
 {
@@ -27,7 +28,8 @@ enum camera
     HERO4,
     HERO5,
     HERO6,
-    HERO7
+    HERO7,
+    FUSION
 };
 
 //The above settings must be between a *_first and *_last member

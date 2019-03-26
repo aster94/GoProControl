@@ -70,24 +70,32 @@ uint8_t GoProControl::begin()
 
 	WiFi.begin(_ssid.c_str(), _pwd.c_str());
 
-	while (WiFi.status() != WL_CONNECTED) {
-    	delay(1000);
-    	Serial.println("Connecting to WiFi..");
-  	}
+	uint32_t start_time = millis();
+	while (WiFi.status() != WL_CONNECTED && start_time + MAX_WAIT_TIME > millis())
+	{
+		if (_debug)
+		{
+			delay(100);
+			_debug_port->print(".");
+		}
+	}
 
 	if (WiFi.status() == WL_CONNECTED)
 	{
 		if (_debug)
 		{
-			_debug_port->println("Connected to GoPro");
+			_debug_port->println("\nConnected to GoPro");
 		}
 		_connected = true;
 		return true;
 	}
 	else
 	{
-		_debug_port->print("Connection failed with status: ");
-		_debug_port->println(WiFi.status());
+		if (_debug)
+		{
+			_debug_port->print("\nConnection failed with status: ");
+			_debug_port->println(WiFi.status());
+		}
 		_connected = false;
 	}
 
@@ -126,7 +134,7 @@ uint8_t GoProControl::keepAlive()
 	{
 		if (_camera == HERO3)
 		{
-			// not needed since the connection won't be closed by the camera (tested 6 minutes)
+			// not needed since the connection won't be closed by the camera (tested for more then 6 minutes)
 			return true;
 		}
 		else if (_camera >= HERO4)
@@ -136,7 +144,6 @@ uint8_t GoProControl::keepAlive()
 				_debug_port->println("Keeping connection alive");
 			}
 			sendRequest("_GPHD_:0:0:2:0.000000\n");
-			// should it answer?
 		}
 	}
 }
@@ -146,7 +153,7 @@ uint8_t GoProControl::keepAlive()
 ////////////////////////////////////////////////////////////
 
 #if defined(ARDUINO_ARCH_ESP32)
-// none of these function will work, I am adding these for a future release
+// none of these function will work, I am adding these for a future release, see the readME
 // https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#bluetooth-pairing
 uint8_t GoProControl::enableBLE()
 {
@@ -377,7 +384,7 @@ uint8_t GoProControl::shoot()
 #else
 		if (_debug)
 		{
-			_debug_port->println("This shoudln't be run");
+			_debug_port->println("This shouldn't be run");
 		}
 		return -1;
 #endif
@@ -425,7 +432,7 @@ uint8_t GoProControl::stopShoot()
 #else
 		if (_debug)
 		{
-			_debug_port->println("This shoudln't be run");
+			_debug_port->println("This shouldn't be run");
 		}
 		return -1;
 #endif
@@ -490,7 +497,6 @@ uint8_t GoProControl::setMode(const uint8_t option)
 		}
 		else if (_camera >= HERO4)
 		{
-			// todo: add sub-modes
 			switch (option)
 			{
 			case VIDEO_MODE:
@@ -533,7 +539,7 @@ uint8_t GoProControl::setMode(const uint8_t option)
 #else
 		if (_debug)
 		{
-			_debug_port->println("This shoudln't be run");
+			_debug_port->println("This shouldn't be run");
 		}
 		return -1;
 #endif
@@ -1165,7 +1171,10 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
 	}
 	else if (_camera >= HERO4)
 	{
-		// Not supported in Hero4/5/6/7
+		if (_debug)
+		{
+			_debug_port->println("Not supported by HERO4 and newer");
+		}
 		return false;
 	}
 	return sendHTTPRequest(_request);
@@ -1217,7 +1226,6 @@ uint8_t GoProControl::localizationOff()
 		}
 		return false;
 	}
-	// todo test to turn it on and off with the camera off
 
 	if (!isOn()) // camera is off
 	{
@@ -1337,41 +1345,43 @@ void GoProControl::printStatus()
 		_debug_port->print(WiFi.RSSI());
 		_debug_port->println(" dBm");
 
-		uint8_t mac[6];
-		WiFi.macAddress(mac);
+		uint8_t my_mac[6];
+		WiFi.macAddress(my_mac);
 		_debug_port->print("My MAC:\t\t");
-		_debug_port->print(mac[5], HEX);
+		_debug_port->print(my_mac[5], HEX);
 		_debug_port->print(":");
-		_debug_port->print(mac[4], HEX);
+		_debug_port->print(my_mac[4], HEX);
 		_debug_port->print(":");
-		_debug_port->print(mac[3], HEX);
+		_debug_port->print(my_mac[3], HEX);
 		_debug_port->print(":");
-		_debug_port->print(mac[2], HEX);
+		_debug_port->print(my_mac[2], HEX);
 		_debug_port->print(":");
-		_debug_port->print(mac[1], HEX);
+		_debug_port->print(my_mac[1], HEX);
 		_debug_port->print(":");
-		_debug_port->println(mac[0], HEX);
+		_debug_port->println(my_mac[0], HEX);
 
+		/*
+		uint8_t *gp_mac = WiFi.BSSID();
+		_debug_port->print("GoPro MAC:\t");
+		_debug_port->print(gp_mac[5], HEX);
+		_debug_port->print(":");
+		_debug_port->print(gp_mac[4], HEX);
+		_debug_port->print(":");
+		_debug_port->print(gp_mac[3], HEX);
+		_debug_port->print(":");
+		_debug_port->print(gp_mac[2], HEX);
+		_debug_port->print(":");
+		_debug_port->print(gp_mac[1], HEX);
+		_debug_port->print(":");
+		_debug_port->println(gp_mac[0], HEX);
+		*/
+	
 		if (_camera >= HERO4)
 		{
-			_debug_port->print("GoPro MAC:\t");
-			 uint8_t* gpMac = WiFi.BSSID();
-			_debug_port->print(gpMac[5],HEX);
-			_debug_port->print(":");
-			_debug_port->print(gpMac[4],HEX);
-			_debug_port->print(":");
-			_debug_port->print(gpMac[3],HEX);
-			_debug_port->print(":");
-			_debug_port->print(gpMac[2],HEX);
-			_debug_port->print(":");
-			_debug_port->print(gpMac[1],HEX);
-			_debug_port->print(":");
-			_debug_port->println(gpMac[0],HEX);
 			_debug_port->print("Board Name:\t");
 			_debug_port->println(_board_name);
 		}
-		// todo add more info like mode (photo, video), fow and so on
-		// convert this output in a human readable https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes
+
 		_debug_port->println();
 	}
 }
@@ -1528,18 +1538,17 @@ uint8_t GoProControl::confirmPairing()
 	{
 		if (_debug)
 		{
-			_debug_port->println("Not supported");
+			_debug_port->println("Not supported by HERO3");
 		}
 		return false;
 	}
 	else if (_camera == HERO4)
 	{
-		// https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing
-		// todo
 		if (_debug)
 		{
-			_debug_port->println("not implemented yet");
+			_debug_port->println("Not implemented yet, see readME");
 		}
+		return false;
 	}
 	else if (_camera >= HERO5)
 	{
@@ -1549,52 +1558,87 @@ uint8_t GoProControl::confirmPairing()
 	return sendHTTPRequest(_request);
 }
 
-uint16_t GoProControl::listenResponse(const bool only_first_line)
+uint16_t GoProControl::listenResponse()
 {
-	memset(_response, 0, LEN(_response)); // empty _response
-	if (_wifi_client.available() == 0)
-	{
-		delay(5);
-	}
-	_wifi_client.readBytesUntil('\n', _response, 18);
+	char incoming;
+	char first_line[20];
+	bool first_line_completed = false;
+	uint8_t index = 0;
+
 	if (_debug)
 	{
-		_debug_port->println("Response body start");
-		_debug_port->println(_response);
+		_debug_port->print("Waiting response");
 	}
 
-	char incoming;
-	while (_wifi_client.available()) // empty the incoming buffer
+	uint32_t start_time = millis();
+	while (_wifi_client.available() == 0 && start_time + MAX_WAIT_TIME > millis())
+	{
+		delay(5);
+		if (_debug)
+		{
+			_debug_port->print(".");
+		}
+	}
+
+	if (_debug)
+	{
+		_debug_port->println("\nStart response body");
+	}
+
+	while (_wifi_client.available() > 0)
 	{
 		incoming = _wifi_client.read();
-		if (only_first_line == false && _debug)
+		if (first_line_completed == false)
+		{
+			first_line[index++] = incoming;
+			if (incoming == '\n')
+			{
+				first_line_completed = true;
+			}
+		}
+		if (_debug)
 		{
 			_debug_port->print(incoming);
 		}
 	}
+
 	if (_debug)
 	{
-		_debug_port->println("Response body end");
+		_debug_port->println("\nEnd response body");
 	}
 
-	if (_response[0] == 0)
+	if (first_line[0] == NULL) // empty response
 	{
 		if (_debug)
 		{
-			_debug_port->println("empty response");
+			_debug_port->println("No response");
 		}
-		return -1;
+		return false;
 	}
-	// typical response: "HTTP/1.1 200 OK" we need to split it
-	char *token = strtok(_response, " "); // waste first part (HTTP/1.1) of the response
-	token = strtok(NULL, " ");			  // this is the response code
-	uint16_t code = atoi(token);		  // convert to integer
+
+	uint16_t response_code = atoi(splitString(first_line, 1));
 
 	if (_debug)
 	{
 		_debug_port->print("Response code: ");
-		_debug_port->println(code);
+		_debug_port->println(response_code);
 	}
 
-	return code;
+	return response_code;
+}
+
+char *GoProControl::splitString(char str[], uint8_t index)
+{
+	uint8_t counter = 0;
+	char *token = strtok(str, " ");
+	while (token != NULL)
+	{
+		if (counter == index)
+		{
+			return token;
+		}
+		token = strtok(NULL, " ");
+		counter++;
+	}
+	return NULL;
 }

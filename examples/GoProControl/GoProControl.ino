@@ -1,11 +1,13 @@
 #include <GoProControl.h>
 #include "Constants.h"
 
+/*
+  Control your GoPro with the Serial Monitor: to start edit the file Constants.h and choose your camera
+*/
+
 // Choose your camera
 //GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA); // use this if you have a HERO3 or older
 //GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA, gopro_mac_address, BOARD_NAME);
-
-char in = 0;
 
 void setup()
 {
@@ -14,10 +16,10 @@ void setup()
 
 void loop()
 {
+  char in = 0;
   if (Serial.available() > 0)
   {
     in = Serial.read();
-    //Serial.write(in);
   }
 
   switch (in)
@@ -25,12 +27,12 @@ void loop()
   default:
     break;
 
-  // connect
+  // Connect
   case 'C':
     gp.begin();
     break;
 
-  // turn on/off
+  // Turn on and off
   case 'T':
     gp.turnOn();
     break;
@@ -39,17 +41,17 @@ void loop()
     gp.turnOff();
     break;
 
-  // take a picture of start a video
+  // Take a picture of start a video
   case 'A':
     gp.shoot();
     break;
 
-  // stop the video
+  // Stop the video
   case 'S':
     gp.stopShoot();
     break;
 
-  //set modes
+  // Set modes
   case 'V':
     gp.setMode(VIDEO_MODE);
     break;
@@ -62,7 +64,7 @@ void loop()
     gp.setMode(MULTISHOT_MODE);
     break;
 
-  // set orientation
+  // Change the orientation
   case 'u':
     gp.setOrientation(ORIENTATION_UP);
     break;
@@ -71,6 +73,7 @@ void loop()
     gp.setOrientation(ORIENTATION_DOWN);
     break;
 
+  // Change other parameters
   case 'W':
     gp.setVideoFov(MEDIUM_FOV);
     break;
@@ -91,6 +94,7 @@ void loop()
     gp.setTimeLapseInterval(60);
     break;
 
+  // Localize the camera
   case 'O':
     gp.localizationOn();
     break;
@@ -99,6 +103,7 @@ void loop()
     gp.localizationOff();
     break;
 
+  // Delete some files, be carefull!
   case 'l':
     gp.deleteLast();
     break;
@@ -107,19 +112,15 @@ void loop()
     gp.deleteAll();
     break;
 
-  case 'X':
-    gp.end();
-    break;
-
+  // Print useful data
   case 'p':
     gp.printStatus();
     break;
 
-  case 'K':
-    gp.keepAlive();
+  // Close the connection
+  case 'X':
+    gp.end();
     break;
   }
-
-  in = 0;
-  gp.keepAlive();
+  gp.keepAlive(); // not needed on HERO3
 }
