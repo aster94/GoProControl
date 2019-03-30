@@ -4,8 +4,7 @@
 // replace the following:
 #define GOPRO_SSID "__YOUR__CAMERA__NAME__"
 #define GOPRO_PASS "__YOUR__CAMERA__PASS__"
-#define CAMERA HEROX // your HERO model 
+#define CAMERA HEROX // your HERO model
 uint8_t gopro_mac_address[6]= {1,2,3,4,5,6}; // the MAC address of your GoPro
-#define BOARD_NAME "__YOUR__BOARD__NAME__" 
 
 #endif

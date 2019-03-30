@@ -49,7 +49,7 @@ I made the library with a style which would be quite easy to add other cameras (
 ## Installation
 
 - Arduino IDE:
-	- Go to Tools > Manage libraries 
+	- Go to Tools > Manage libraries
 	- Search for `GoProControl`
 - PlatformIO:
 	- From command line: run ```pio lib install "GoProControl"```
@@ -61,7 +61,7 @@ I made the library with a style which would be quite easy to add other cameras (
 
 ## Examples
 
-**Important:** Rename the `Constants.h.example` to `Constants.h` and change the SSID, Password and camera model. If you have a GoPro HERO4 or newer you should add also the [mac address](https://havecamerawilltravel.com/gopro/gopro-mac-address/) and the hostname of the board you want to connect to your camera
+**Important:** Rename the `Constants.h.example` to `Constants.h` and change the SSID, Password and camera model. If you have a GoPro HERO4 or newer you should add also the [mac address](https://havecamerawilltravel.com/gopro/gopro-mac-address/) (in a future release this would be done automatically).
 
 ## Supported Options
 
@@ -155,7 +155,7 @@ I made the library with a style which would be quite easy to add other cameras (
 
 **NOTE:** Not all the options are available for all the cameras (for example on a HERO3 you can't set 1080p at 240 frame per second 😲). You can see the possibilities on the manual of your camera of here for [HERO3](https://github.com/KonradIT/goprowifihack/blob/master/HERO3/Framerates-Resolutions.md) and here for [HERO4 and newer](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/Framerates-Resolutions.md)
 
-## To Do list and known issues 
+## To Do list and known issues
 
 - Missing get status which gives info like mode (photo, video), fow and so on: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes)
 - Wait for the ESP32 core to make a stable BLE core, right now it has many issues, especially, if used together with wifi: [see here](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+ble)
