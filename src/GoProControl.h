@@ -80,7 +80,7 @@ class GoProControl
 
     // Control
     uint8_t turnOn();
-    uint8_t turnOff();
+    uint8_t turnOff(const bool force = false);
     uint8_t isOn();
     uint8_t checkConnection(const bool silent = false);
 

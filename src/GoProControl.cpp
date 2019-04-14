@@ -259,14 +259,28 @@ uint8_t GoProControl::turnOn()
     }
     else if (_camera >= HERO4)
     {
-        sendWoL();
-        return true;
+        if (_gopro_mac[0] == 0)
+        {
+            if (_debug)
+            {
+                _debug_port->println("No BSSID, unable to turn on the camera");
+#if defined(ARDUINO_ARCH_ESP8266)
+                _debug_port->println("The ESP8266 can't get it, you need to pass it in the constructor, see the README");
+#endif
+            }
+            return false;
+        }
+        else
+        {
+            sendWoL();
+            return true;
+        }
     }
 
     return sendHTTPRequest(_request);
 }
 
-uint8_t GoProControl::turnOff()
+uint8_t GoProControl::turnOff(const bool force)
 {
     if (!checkConnection()) // not connected
     {
@@ -295,17 +309,22 @@ uint8_t GoProControl::turnOff()
     }
     else if (_camera >= HERO4)
     {
-#if not defined(ARDUINO_ARCH_ESP8266) // ESP8266 can't get the BSSID, see the README
-        if (_gopro_mac[0] == 0)
+        if (_gopro_mac[0] == 0 && force == false)
         {
             getBSSID();
             if (_debug)
             {
-                _debug_port->println("Can't turn off, try again");
+                _debug_port->println("BSSID not ready, try again");
             }
             return false;
         }
-#endif
+        else if (_gopro_mac[0] == 0 && force)
+        {
+            if (_debug)
+            {
+                _debug_port->println("Forcing turnOff, you won't be able to turnOn again from arduino");
+            }
+        }
         _request = "/gp/gpControl/command/system/sleep";
     }
 
@@ -1457,11 +1476,10 @@ void GoProControl::sendWoL()
 
     for (uint8_t i = 0; i < 16; i++)
     {
-        _udp_client.write(_gopro_mac, 6);
+        _udp_client.write(_gopro_mac, LEN(_gopro_mac));
     }
     _udp_client.endPacket();
     _udp_client.stop();
-    delay(2000);
 }
 
 uint8_t GoProControl::sendRequest(const String request)
