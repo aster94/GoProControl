@@ -241,18 +241,6 @@ uint8_t GoProControl::turnOn()
         return false;
     }
 
-    if (_camera >= HERO4) // avoid this check in older cameras
-    {
-        if (isOn()) // camera is already on
-        {
-            if (_debug)
-            {
-                _debug_port->println("Camera is already on");
-            }
-            return false;
-        }
-    }
-
     if (_camera == HERO3)
     {
         _request = "/bacpac/PW?t=" + _pwd + "&p=%01";
@@ -289,18 +277,6 @@ uint8_t GoProControl::turnOff(const bool force)
             _debug_port->println("Connect the camera first");
         }
         return false;
-    }
-
-    if (_camera >= HERO4) // avoid this check in older cameras
-    {
-        if (!isOn()) // camera is already off
-        {
-            if (_debug)
-            {
-                _debug_port->println("Camera is already off");
-            }
-            return false;
-        }
     }
 
     if (_camera == HERO3)
@@ -390,15 +366,6 @@ uint8_t GoProControl::shoot()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (WIFI_MODE)
     {
 
@@ -434,15 +401,6 @@ uint8_t GoProControl::stopShoot()
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -486,15 +444,6 @@ uint8_t GoProControl::setMode(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -602,15 +551,6 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -669,15 +609,6 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -767,15 +698,6 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -836,15 +758,6 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -958,15 +871,6 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -1022,15 +926,6 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1104,15 +999,6 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1212,15 +1098,6 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     // convert float to integer
     const uint8_t i_option = (uint8_t)option;
 
@@ -1285,15 +1162,6 @@ uint8_t GoProControl::localizationOn()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         _request = "camera/LL?t=" + _pwd + "&p=%01";
@@ -1313,15 +1181,6 @@ uint8_t GoProControl::localizationOff()
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1349,15 +1208,6 @@ uint8_t GoProControl::deleteLast()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         _request = "camera/DL?t=" + _pwd;
@@ -1377,15 +1227,6 @@ uint8_t GoProControl::deleteAll()
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
