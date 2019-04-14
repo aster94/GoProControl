@@ -24,10 +24,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <Settings.h>
 
 // include the correct wifi library
-#if defined(ARDUINO_ARCH_ESP8266) // ESP8266
-#include <ESP8266WiFi.h>
-#elif defined(ARDUINO_ARCH_ESP32) // ESP32
+#if defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
+#elif defined(ARDUINO_ARCH_ESP8266) // ESP8266
+#include <ESP8266WiFi.h>
+#warning "turnOn() function won't work if you don't provide the mac of your camera"
 #elif defined(ARDUINO_SAMD_MKR1000) // MKR1000
 #include <WiFi101.h>
 #elif defined(ARDUINO_SAMD_MKRWIFI1010) || defined(ARDUINO_AVR_UNO_WIFI_REV2) // MKR WiFi 1010 and UNO WiFi Rev.2
@@ -60,8 +61,7 @@ class GoProControl
 {
   public:
     // Constructors
-    GoProControl(const String ssid, const String pwd, const uint8_t camera);                                                            // for HERO3 or older
-    GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[], const String board_name = ""); // for HERO4 or newer
+    GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t gopro_mac[] = NULL, const String board_name = "");
 
     // Comunication
     uint8_t begin();
@@ -128,7 +128,8 @@ class GoProControl
     String _request;
     String _parameter;
 
-    uint8_t _mac_address[6];
+    uint8_t *_gopro_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
+    uint8_t *_board_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
     String _board_name;
 
     bool WIFI_MODE = true;
@@ -150,6 +151,8 @@ class GoProControl
     uint8_t confirmPairing();
     uint16_t listenResponse();
     char *splitString(char str[], uint8_t index);
+    void printMacAddress(const uint8_t mac[]);
+    void getBSSID();
 };
 
 #endif //GOPRO_CONTROL_H
