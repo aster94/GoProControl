@@ -1,55 +1,50 @@
 #######################################
-# Datatypes (KEYWORD1)
+# Syntax Coloring Map
 #######################################
 
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
 GoProControl	KEYWORD1
+
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+begin	KEYWORD2
+end	KEYWORD2
+keepAlive	KEYWORD2
+enableBLE	KEYWORD2
+disableBLE	KEYWORD2
+wifiOff	KEYWORD2
+wifiOn	KEYWORD2
+turnOn	KEYWORD2
+turnOff	KEYWORD2
+isOn	KEYWORD2
+checkConnection	KEYWORD2
+shoot	KEYWORD2
+stopShoot	KEYWORD2
+setMode	KEYWORD2
+setOrientation	KEYWORD2
+setVideoResolution	KEYWORD2
+setVideoFov	KEYWORD2
+setFrameRate	KEYWORD2
+setVideoEncoding	KEYWORD2
+setPhotoResolution	KEYWORD2
+setTimeLapseInterval	KEYWORD2
+setContinuousShot	KEYWORD2
+localizationOn	KEYWORD2
+localizationOff	KEYWORD2
+deleteLast	KEYWORD2
+deleteAll	KEYWORD2
+enableDebug	KEYWORD2
+disableDebug	KEYWORD2
+printStatus	KEYWORD2
 
-begin	                    KEYWORD2
-end                         KEYWORD2
-keepAlive                   KEYWORD2
 
-enableBLE                   KEYWORD2
-disableBLE                  KEYWORD2
-wifiOff                     KEYWORD2
-wifiOn                      KEYWORD2
-
-turnOn	                    KEYWORD2
-turnOff	                    KEYWORD2
-isOn                        KEYWORD2
-checkConnection             KEYWORD2
-
-shoot                       KEYWORD2
-stopShoot                   KEYWORD2
-
-setMode                     KEYWORD2
-setOrientation              KEYWORD2
-
-setVideoResolution 		    KEYWORD2
-setVideoFov                 KEYWORD2
-setFrameRate                KEYWORD2
-setVideoEncoding            KEYWORD2
-
-setPhotoResolution          KEYWORD2
-setTimeLapseInterval        KEYWORD2
-setContinuousShot           KEYWORD2
-
-localizationOn	            KEYWORD2
-localizationOff	            KEYWORD2
-deleteLast	                KEYWORD2
-deleteAll	                KEYWORD2
-
-enableDebug	                KEYWORD2
-disableDebug                KEYWORD2
-printStatus                 KEYWORD2
-
-#######################################
+######################################
 # Constants (LITERAL1)
-#######################################
-
+######################################
 HERO	LITERAL1
 HERO2	LITERAL1
 HERO3	LITERAL1
@@ -57,62 +52,55 @@ HERO4	LITERAL1
 HERO5	LITERAL1
 HERO6	LITERAL1
 HERO7	LITERAL1
-FUSION  LITERAL1
-
-VIDEO_MODE	    LITERAL1
-PHOTO_MODE	    LITERAL1
-BURST_MODE	    LITERAL1
+FUSION	LITERAL1
+VIDEO_MODE	LITERAL1
+PHOTO_MODE	LITERAL1
+BURST_MODE	LITERAL1
 TIMELAPSE_MODE	LITERAL1
-TIMER_MODE	    LITERAL1
+TIMER_MODE	LITERAL1
 PLAY_HDMI_MODE	LITERAL1
-MULTISHOT_MODE  LITERAL1
-
-ORIENTATION_UP	    LITERAL1
+MULTISHOT_MODE	LITERAL1
+ORIENTATION_UP	LITERAL1
 ORIENTATION_DOWN	LITERAL1
-ORIENTATION_AUTO    LITERAL1
-
-VR_4K               LITERAL1
-VR_2K               LITERAL1
-VR_2K_SuperView     LITERAL1
-VR_1440p            LITERAL1
-VR_1080p_SuperView  LITERAL1
-VR_1080p            LITERAL1
-VR_960p             LITERAL1
-VR_720p_SuperView   LITERAL1
-VR_720p             LITERAL1
-VR_WVGA             LITERAL1
-
+ORIENTATION_AUTO	LITERAL1
+VR_4K	LITERAL1
+VR_2K	LITERAL1
+VR_2K_SuperView	LITERAL1
+VR_1440p	LITERAL1
+VR_1080p_SuperView	LITERAL1
+VR_1080p	LITERAL1
+VR_960p	LITERAL1
+VR_720p_SuperView	LITERAL1
+VR_720p	LITERAL1
+VR_WVGA	LITERAL1
 WIDE_FOV	LITERAL1
 MEDIUM_FOV	LITERAL1
 NARROW_FOV	LITERAL1
-LINEAR_FOV  LITERAL1
-
-FR_240      LITERAL1
-FR_120      LITERAL1
-FR_100      LITERAL1
-FR_90       LITERAL1
-FR_80       LITERAL1
-FR_60       LITERAL1
-FR_50       LITERAL1
-FR_48       LITERAL1
-FR_30       LITERAL1
-FR_25       LITERAL1
-FR_24       LITERAL1
-FR_15       LITERAL1
-FR_12p5     LITERAL1
-FR_12       LITERAL1
-
+LINEAR_FOV	LITERAL1
+FR_240	LITERAL1
+FR_120	LITERAL1
+FR_100	LITERAL1
+FR_90	LITERAL1
+FR_80	LITERAL1
+FR_60	LITERAL1
+FR_50	LITERAL1
+FR_48	LITERAL1
+FR_30	LITERAL1
+FR_25	LITERAL1
+FR_24	LITERAL1
+FR_15	LITERAL1
+FR_12p5	LITERAL1
+FR_12	LITERAL1
 NTSC	LITERAL1
-PAL     LITERAL1
-
-PR_12MP_WIDE    LITERAL1
-PR_12MP_MEDIUM  LITERAL1
-PR_12MP_NARROW  LITERAL1
-PR_12MP_LINEAR  LITERAL1
-PR_11MP_WIDE    LITERAL1
-PR_8MP_WIDE     LITERAL1
-PR_8MP_MEDIUM   LITERAL1
-PR_7MP_WIDE     LITERAL1
-PR_7MP_MEDIUM   LITERAL1
-PR_5MP_WIDE     LITERAL1
-PR_5MP_MEDIUM   LITERAL1
+PAL	LITERAL1
+PR_12MP_WIDE	LITERAL1
+PR_12MP_MEDIUM	LITERAL1
+PR_12MP_NARROW	LITERAL1
+PR_12MP_LINEAR	LITERAL1
+PR_11MP_WIDE	LITERAL1
+PR_8MP_WIDE	LITERAL1
+PR_8MP_MEDIUM	LITERAL1
+PR_7MP_WIDE	LITERAL1
+PR_7MP_MEDIUM	LITERAL1
+PR_5MP_WIDE	LITERAL1
+PR_5MP_MEDIUM	LITERAL1
