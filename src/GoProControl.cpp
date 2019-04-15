@@ -497,23 +497,83 @@ uint8_t GoProControl::setMode(const uint8_t option)
         }
         else if (_camera >= HERO4)
         {
+            _parameter2 = "";
             switch (option)
             {
-            case VIDEO_MODE:
-                _parameter = "0";
-                break;
-            case PHOTO_MODE:
-                _parameter = "1";
-                break;
-            case MULTISHOT_MODE:
-                _parameter = "2";
-                break;
-            default:
-                _debug_port->println("Wrong parameter for setMode");
-                return -1;
+                // return to basic mode with last active secondary/sub mode
+                case VIDEO_MODE:
+                    _parameter = "0";
+                    break;
+                case PHOTO_MODE:
+                    _parameter = "1";
+                    break;
+                case MULTISHOT_MODE:
+                    _parameter = "2";
+                    break;
+
+                // Secondary/sub modes, only tested with HERO7 (White) and HERO7_BLACK
+                case VIDEO_SUB_MODE:
+                    _parameter = "0";
+                    _parameter2 = "0";
+                    break;
+                case VIDEO_TIMELAPSE_MODE:
+                    _parameter = "0";
+                    _parameter2 = "1";
+                    break;
+                case VIDEO_PHOTO_MODE:
+                    // not supported by HERO6 and above
+                    _parameter = "0";
+                    _parameter2 = "2";
+                    break;
+                case VIDEO_LOOPING_MODE:
+                    // HERO7_BLACK and presumably above
+                    _parameter = "0";
+                    _parameter2 = "3";
+                    break;
+                case VIDEO_TIMEWARP_MODE:
+                    // HERO7_BLACK and presumably above
+                    _parameter = "0";
+                    _parameter2 = "4";
+                    break;
+
+                
+                case PHOTO_SINGLE_MODE:
+                    _parameter = "1";
+                    _parameter2 = "1";
+                    break;
+                case PHOTO_NIGHT_MODE:
+                    // HERO7_BLACK and presumably above
+                    _parameter = "1";
+                    _parameter2 = "2";
+                    break;
+
+
+                case MULTISHOT_BURST_MODE:
+                    _parameter = "2";
+                    _parameter2 = "0";
+                    break;
+                case MULTISHOT_TIMELAPSE_MODE:
+                    // HERO7_BLACK and presumably above
+                    _parameter = "2";
+                    _parameter2 = "1";
+                    break;
+                case MULTISHOT_NIGHTLAPSE_MODE:
+                    // HERO7_BLACK and presumably above
+                    _parameter = "2";
+                    _parameter2 = "2";
+                    break;
+
+                default:
+                    _debug_port->println("Wrong parameter for setMode");
+                    return -1;
             }
 
-            _request = "/gp/gpControl/command/mode?p=" + _parameter;
+            if ( _parameter2 == "" ) {
+                _request = "/gp/gpControl/command/mode?p=" + _parameter;
+            }
+            else {
+                _request = "/gp/gpControl/command/sub_mode?mode=" + _parameter + "&sub_mode=" + _parameter2;
+            }
         }
 
         return sendHTTPRequest(_request);

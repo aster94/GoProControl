@@ -127,6 +127,7 @@ class GoProControl
 
     String _request;
     String _parameter;
+    String _parameter2;
 
     uint8_t _mac_address[6];
     String _board_name;
