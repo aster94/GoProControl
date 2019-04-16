@@ -127,6 +127,7 @@ class GoProControl
 
     String _request;
     String _parameter;
+    String _parameter2;
 
     uint8_t *_gopro_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
     uint8_t *_board_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
