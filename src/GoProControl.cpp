@@ -24,18 +24,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 ////////                Constructors                ////////
 ////////////////////////////////////////////////////////////
 
-GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera)
+GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t gopro_mac[], const String board_name)
 {
     _ssid = ssid;
     _pwd = pwd;
     _camera = camera;
-}
 
-GoProControl::GoProControl(const String ssid, const String pwd, const uint8_t camera, const uint8_t mac_address[], const String board_name)
-    : GoProControl(ssid, pwd, camera)
-{
-    memcpy(_mac_address, mac_address, LEN(_mac_address));
+    if (gopro_mac == NULL)
+    {
+        memset(_gopro_mac, NULL, 6 * sizeof(*_gopro_mac));
+    }
+    else
+    {
+        memcpy(_gopro_mac, gopro_mac, LEN(gopro_mac));
+    }
     _board_name = board_name;
+
+    memset(_board_mac, NULL, 6 * sizeof(*_board_mac));
 }
 
 ////////////////////////////////////////////////////////////
@@ -117,6 +122,7 @@ void GoProControl::end()
     _wifi_client.stop();
     WiFi.disconnect();
     _connected = false;
+    memset(_gopro_mac, NULL, 6 * sizeof(*_gopro_mac));
 }
 
 uint8_t GoProControl::keepAlive()
@@ -235,32 +241,34 @@ uint8_t GoProControl::turnOn()
         return false;
     }
 
-    if (_camera >= HERO4) // avoid this check in older cameras
-    {
-        if (isOn()) // camera is already on
-        {
-            if (_debug)
-            {
-                _debug_port->println("Camera is already on");
-            }
-            return false;
-        }
-    }
-
     if (_camera == HERO3)
     {
         _request = "/bacpac/PW?t=" + _pwd + "&p=%01";
     }
     else if (_camera >= HERO4)
     {
-        sendWoL();
-        return true;
+        if (_gopro_mac[0] == 0)
+        {
+            if (_debug)
+            {
+                _debug_port->println("No BSSID, unable to turn on the camera");
+#if defined(ARDUINO_ARCH_ESP8266)
+                _debug_port->println("The ESP8266 can't get it, you need to pass it in the constructor, see the README");
+#endif
+            }
+            return false;
+        }
+        else
+        {
+            sendWoL();
+            return true;
+        }
     }
 
     return sendHTTPRequest(_request);
 }
 
-uint8_t GoProControl::turnOff()
+uint8_t GoProControl::turnOff(const bool force)
 {
     if (!checkConnection()) // not connected
     {
@@ -271,24 +279,28 @@ uint8_t GoProControl::turnOff()
         return false;
     }
 
-    if (_camera >= HERO4) // avoid this check in older cameras
-    {
-        if (!isOn()) // camera is already off
-        {
-            if (_debug)
-            {
-                _debug_port->println("Camera is already off");
-            }
-            return false;
-        }
-    }
-
     if (_camera == HERO3)
     {
         _request = "/bacpac/PW?t=" + _pwd + "&p=%00";
     }
     else if (_camera >= HERO4)
     {
+        if (_gopro_mac[0] == 0 && force == false)
+        {
+            getBSSID();
+            if (_debug)
+            {
+                _debug_port->println("BSSID not ready, try again");
+            }
+            return false;
+        }
+        else if (_gopro_mac[0] == 0 && force)
+        {
+            if (_debug)
+            {
+                _debug_port->println("Forcing turnOff, you won't be able to turnOn again from arduino");
+            }
+        }
         _request = "/gp/gpControl/command/system/sleep";
     }
 
@@ -354,21 +366,12 @@ uint8_t GoProControl::shoot()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (WIFI_MODE)
     {
 
         if (_camera == HERO3)
         {
-            _request = "/camera/SH?t=" + _pwd + "&p=%01";
+            _request = "/bacpac/SH?t=" + _pwd + "&p=%01";
         }
         else if (_camera >= HERO4)
         {
@@ -402,21 +405,12 @@ uint8_t GoProControl::stopShoot()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (WIFI_MODE)
     {
 
         if (_camera == HERO3)
         {
-            _request = "/camera/SH?t=" + _pwd + "&p=%00";
+            _request = "/bacpac/SH?t=" + _pwd + "&p=%00";
         }
         else if (_camera >= HERO4)
         {
@@ -454,15 +448,6 @@ uint8_t GoProControl::setMode(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (WIFI_MODE)
     {
 
@@ -489,7 +474,10 @@ uint8_t GoProControl::setMode(const uint8_t option)
                 _parameter = "05";
                 break;
             default:
-                _debug_port->println("Wrong parameter for setMode");
+                if (_debug)
+                {
+                    _debug_port->println("Wrong parameter for setMode");
+                }
                 return -1;
             }
 
@@ -500,78 +488,78 @@ uint8_t GoProControl::setMode(const uint8_t option)
             _parameter2 = "";
             switch (option)
             {
-                // return to basic mode with last active secondary/sub mode
-                case VIDEO_MODE:
-                    _parameter = "0";
-                    break;
-                case PHOTO_MODE:
-                    _parameter = "1";
-                    break;
-                case MULTISHOT_MODE:
-                    _parameter = "2";
-                    break;
+              case VIDEO_MODE:
+                  _parameter = "0";
+                  break;
+              case VIDEO_SUB_MODE:
+                  _parameter = "0";
+                  _parameter2 = "0";
+                  break;
+              case VIDEO_TIMELAPSE_MODE:
+                  _parameter = "0";
+                  _parameter2 = "1";
+                  break;
+              case VIDEO_PHOTO_MODE:
+                  // not supported by HERO6 and above
+                  _parameter = "0";
+                  _parameter2 = "2";
+                  break;
+              case VIDEO_LOOPING_MODE:
+                  // HERO7_BLACK and presumably above
+                  _parameter = "0";
+                  _parameter2 = "3";
+                  break;
+              case VIDEO_TIMEWARP_MODE:
+                  // HERO7_BLACK and presumably above
+                  _parameter = "0";
+                  _parameter2 = "4";
+                  break;
 
-                // Secondary/sub modes, only tested with HERO7 (White) and HERO7_BLACK
-                case VIDEO_SUB_MODE:
-                    _parameter = "0";
-                    _parameter2 = "0";
-                    break;
-                case VIDEO_TIMELAPSE_MODE:
-                    _parameter = "0";
-                    _parameter2 = "1";
-                    break;
-                case VIDEO_PHOTO_MODE:
-                    // not supported by HERO6 and above
-                    _parameter = "0";
-                    _parameter2 = "2";
-                    break;
-                case VIDEO_LOOPING_MODE:
-                    // HERO7_BLACK and presumably above
-                    _parameter = "0";
-                    _parameter2 = "3";
-                    break;
-                case VIDEO_TIMEWARP_MODE:
-                    // HERO7_BLACK and presumably above
-                    _parameter = "0";
-                    _parameter2 = "4";
-                    break;
+              case PHOTO_MODE:
+                  _parameter = "1";
+                  break;
+              case PHOTO_SINGLE_MODE:
+                  _parameter = "1";
+                  _parameter2 = "1";
+                  break;
+              case PHOTO_NIGHT_MODE:
+                  // HERO7_BLACK and presumably above
+                  _parameter = "1";
+                  _parameter2 = "2";
+                  break;
 
-                
-                case PHOTO_SINGLE_MODE:
-                    _parameter = "1";
-                    _parameter2 = "1";
-                    break;
-                case PHOTO_NIGHT_MODE:
-                    // HERO7_BLACK and presumably above
-                    _parameter = "1";
-                    _parameter2 = "2";
-                    break;
+              case MULTISHOT_MODE:
+                  _parameter = "2";
+                  break;
+              case MULTISHOT_BURST_MODE:
+                  _parameter = "2";
+                  _parameter2 = "0";
+                  break;
+              case MULTISHOT_TIMELAPSE_MODE:
+                  // HERO7_BLACK and presumably above
+                  _parameter = "2";
+                  _parameter2 = "1";
+                  break;
+              case MULTISHOT_NIGHTLAPSE_MODE:
+                  // HERO7_BLACK and presumably above
+                  _parameter = "2";
+                  _parameter2 = "2";
+                  break;
 
-
-                case MULTISHOT_BURST_MODE:
-                    _parameter = "2";
-                    _parameter2 = "0";
-                    break;
-                case MULTISHOT_TIMELAPSE_MODE:
-                    // HERO7_BLACK and presumably above
-                    _parameter = "2";
-                    _parameter2 = "1";
-                    break;
-                case MULTISHOT_NIGHTLAPSE_MODE:
-                    // HERO7_BLACK and presumably above
-                    _parameter = "2";
-                    _parameter2 = "2";
-                    break;
-
-                default:
+            default:
+                if (_debug)
+                {
                     _debug_port->println("Wrong parameter for setMode");
-                    return -1;
+                }
+                return -1;
             }
 
-            if ( _parameter2 == "" ) {
+            if ( _parameter2 == "" )
+            {
                 _request = "/gp/gpControl/command/mode?p=" + _parameter;
             }
-            else {
+            else
+            {
                 _request = "/gp/gpControl/command/sub_mode?mode=" + _parameter + "&sub_mode=" + _parameter2;
             }
         }
@@ -593,7 +581,10 @@ uint8_t GoProControl::setMode(const uint8_t option)
             sendBLERequest(BLE_ModeMultiShot);
             break;
         default:
-            _debug_port->println("Wrong parameter for setMode");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setMode");
+            }
             return -1;
         }
 #else
@@ -617,15 +608,6 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -637,7 +619,10 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
             _parameter = "01";
             break;
         default:
-            _debug_port->println("Wrong parameter for setOrientation");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setOrientation");
+            }
             return -1;
         }
 
@@ -657,7 +642,10 @@ uint8_t GoProControl::setOrientation(const uint8_t option)
             _parameter = "2";
             break;
         default:
-            _debug_port->println("Wrong parameter for setOrientation");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setOrientation");
+            }
             return -1;
         }
 
@@ -682,15 +670,6 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -708,7 +687,10 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
             _parameter = "01";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoResolution");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoResolution");
+            }
             return -1;
         }
 
@@ -749,7 +731,10 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option)
             _parameter = "13";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoResolution");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoResolution");
+            }
             return -1;
         }
 
@@ -770,15 +755,6 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -793,7 +769,10 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
             _parameter = "02";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoFov");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoFov");
+            }
             return -1;
         }
 
@@ -816,7 +795,10 @@ uint8_t GoProControl::setVideoFov(const uint8_t option)
             _parameter = "4";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoFov");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoFov");
+            }
             return -1;
         }
 
@@ -833,15 +815,6 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -887,7 +860,10 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
             _parameter = "00";
             break;
         default:
-            _debug_port->println("Wrong parameter for setFrameRate");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setFrameRate");
+            }
             return -1;
         }
 
@@ -928,7 +904,10 @@ uint8_t GoProControl::setFrameRate(const uint8_t option)
             _parameter = "9";
             break;
         default:
-            _debug_port->println("Wrong parameter for setFrameRate");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setFrameRate");
+            }
             return -1;
         }
 
@@ -949,15 +928,6 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -969,7 +939,10 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
             _parameter = "01";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoEncoding");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoEncoding");
+            }
             return -1;
         }
 
@@ -986,7 +959,10 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option)
             _parameter = "1";
             break;
         default:
-            _debug_port->println("Wrong parameter for setVideoEncoding");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setVideoEncoding");
+            }
             return -1;
         }
 
@@ -1011,15 +987,6 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
         switch (option)
@@ -1034,7 +1001,10 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
             _parameter = "02";
             break;
         default:
-            _debug_port->println("Wrong parameter for setPhotoResolution");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setPhotoResolution");
+            }
             return -1;
         }
 
@@ -1066,7 +1036,10 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option)
             _parameter = "3";
             break;
         default:
-            _debug_port->println("Wrong parameter for setPhotoResolution");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setPhotoResolution");
+            }
             return -1;
         }
 
@@ -1083,15 +1056,6 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1135,7 +1099,10 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
             _parameter = "00";
             break;
         default:
-            _debug_port->println("Wrong parameter for setTimeLapseInterval");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setTimeLapseInterval");
+            }
             return -1;
         }
 
@@ -1164,7 +1131,10 @@ uint8_t GoProControl::setTimeLapseInterval(float option)
             _parameter = "0";
             break;
         default:
-            _debug_port->println("Wrong parameter for setTimeLapseInterval");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setTimeLapseInterval");
+            }
             return -1;
         }
 
@@ -1181,15 +1151,6 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1223,7 +1184,10 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option)
             _parameter = "00";
             break;
         default:
-            _debug_port->println("Wrong parameter for setContinuousShot");
+            if (_debug)
+            {
+                _debug_port->println("Wrong parameter for setContinuousShot");
+            }
             return -1;
         }
 
@@ -1255,18 +1219,9 @@ uint8_t GoProControl::localizationOn()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
-        _request = "bacpac/LL?t=" + _pwd + "&p=%01";
+        _request = "camera/LL?t=" + _pwd + "&p=%01";
     }
     else if (_camera >= HERO4)
     {
@@ -1287,18 +1242,9 @@ uint8_t GoProControl::localizationOff()
         return false;
     }
 
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
-        }
-        return false;
-    }
-
     if (_camera == HERO3)
     {
-        _request = "bacpac/LL?t=" + _pwd + "&p=%00";
+        _request = "camera/LL?t=" + _pwd + "&p=%00";
     }
     else if (_camera >= HERO4)
     {
@@ -1315,15 +1261,6 @@ uint8_t GoProControl::deleteLast()
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1347,15 +1284,6 @@ uint8_t GoProControl::deleteAll()
         if (_debug)
         {
             _debug_port->println("Connect the camera first");
-        }
-        return false;
-    }
-
-    if (!isOn()) // camera is off
-    {
-        if (_debug)
-        {
-            _debug_port->println("turn on the camera first");
         }
         return false;
     }
@@ -1405,43 +1333,27 @@ void GoProControl::printStatus()
         _debug_port->print(WiFi.RSSI());
         _debug_port->println(" dBm");
 
-        uint8_t my_mac[6];
-        WiFi.macAddress(my_mac);
-        _debug_port->print("My MAC:\t\t");
-        _debug_port->print(my_mac[5], HEX);
-        _debug_port->print(":");
-        _debug_port->print(my_mac[4], HEX);
-        _debug_port->print(":");
-        _debug_port->print(my_mac[3], HEX);
-        _debug_port->print(":");
-        _debug_port->print(my_mac[2], HEX);
-        _debug_port->print(":");
-        _debug_port->print(my_mac[1], HEX);
-        _debug_port->print(":");
-        _debug_port->println(my_mac[0], HEX);
-
-        /*
-		uint8_t *gp_mac = WiFi.BSSID();
-		_debug_port->print("GoPro MAC:\t");
-		_debug_port->print(gp_mac[5], HEX);
-		_debug_port->print(":");
-		_debug_port->print(gp_mac[4], HEX);
-		_debug_port->print(":");
-		_debug_port->print(gp_mac[3], HEX);
-		_debug_port->print(":");
-		_debug_port->print(gp_mac[2], HEX);
-		_debug_port->print(":");
-		_debug_port->print(gp_mac[1], HEX);
-		_debug_port->print(":");
-		_debug_port->println(gp_mac[0], HEX);
-		*/
-
-        if (_camera >= HERO4)
+        if (_connected == true)
         {
+            if (_board_mac[0] == 0)
+            {
+                WiFi.macAddress(_board_mac); //esp32 ok esp8266 s
+            }
+            _debug_port->print("Board MAC:\t");
+            printMacAddress(_board_mac);
+
+            if (_gopro_mac[0] == 0)
+            {
+                getBSSID();
+            }
+
+            _debug_port->print("GoPro MAC:\t");
+            printMacAddress(_gopro_mac);
+            /*
             _debug_port->print("Board Name:\t");
             _debug_port->println(_board_name);
+            */
         }
-
         _debug_port->println();
     }
 }
@@ -1462,11 +1374,10 @@ void GoProControl::sendWoL()
 
     for (uint8_t i = 0; i < 16; i++)
     {
-        _udp_client.write(_mac_address, 6);
+        _udp_client.write(_gopro_mac, LEN(_gopro_mac));
     }
     _udp_client.endPacket();
     _udp_client.stop();
-    delay(2000);
 }
 
 uint8_t GoProControl::sendRequest(const String request)
@@ -1553,10 +1464,13 @@ uint8_t GoProControl::sendHTTPRequest(const String request)
 #if defined(ARDUINO_ARCH_ESP32)
 uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 {
-    _debug_port->println("BLE request:");
-    for (uint8_t i = 0; i <= 3; i++)
+    if (_debug)
     {
-        _debug_port->println(request[i]);
+        _debug_port->println("BLE request:");
+        for (uint8_t i = 0; i <= 3; i++)
+        {
+            _debug_port->println(request[i]);
+        }
     }
 }
 #endif
@@ -1701,4 +1615,30 @@ char *GoProControl::splitString(char str[], uint8_t index)
         counter++;
     }
     return NULL;
+}
+
+void GoProControl::printMacAddress(const uint8_t mac[])
+{
+    for (int8_t i = 5; i >= 0; i--)
+    {
+        if (mac[i] < 16)
+        {
+            _debug_port->print("0");
+        }
+        _debug_port->print(mac[i], HEX);
+        if (i > 0)
+        {
+            _debug_port->print(":");
+        }
+    }
+    _debug_port->println();
+}
+
+void GoProControl::getBSSID()
+{
+#if defined(ARDUINO_ARCH_ESP32) // ESP32 is not compliant with the arduino API
+    _gopro_mac = WiFi.BSSID();
+#else
+    WiFi.BSSID(_gopro_mac);
+#endif
 }
