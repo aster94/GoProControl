@@ -1,6 +1,6 @@
 # GoPro Control Arduino
 
-This is a library to interface with GoPro cameras over WiFi, just press a button and turn on your GoPro action camera using an Arduino!
+This is a library to interface with GoPro cameras over WiFi, just press a button and control your GoPro action camera using an Arduino!
 
 ![Alt text](/extras/gopro3_and_nodemcu.jpg?raw=true "GoPro3")
 
@@ -15,7 +15,8 @@ Have you ever thought about the possibility to control your action camera with y
 - take a picture
 - start and stop a video
 - change the mode (photo, video, etc)
-- delete last file or format the SD
+- delete last file
+- format the SD
 - turn the camera on/off
 - change the field of view (FOV)
 - change frame rate
@@ -34,7 +35,6 @@ Have you ever thought about the possibility to control your action camera with y
 - UNO WiFi Rev.2
 - any arduino boards (UNO, nano, 101, etc.) attached to an ESP8266 (ESP01) using AT commands with [this library](https://github.com/bportaluri/WiFiEsp)
 
-
 ## Supported cameras:
 
 - HERO3
@@ -52,16 +52,16 @@ I made the library with a style which would be quite easy to add other cameras (
 	- Go to Tools > Manage libraries
 	- Search for `GoProControl`
 - PlatformIO:
-	- From command line: run ```pio lib install "GoProControl"```
+	- From command line: run `pio lib install "GoProControl"`
 	- Or if you prefer a GUI from [Platformio IDE](https://docs.platformio.org/en/latest/librarymanager/)
 - Manually:
-	- ```cd $HOME/Arduino/libraries``` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
-	- ```git clone https://github.com/aster94/GoProControl.git```
+	- `cd $HOME/Arduino/libraries` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
+	- `git clone https://github.com/aster94/GoProControl.git`
 	- Restart Arduino IDE
 
 ## Examples
 
-**Important:** Rename the `Constants.h.example` to `Constants.h` and change the SSID, Password and camera model. If you have a GoPro HERO4 or newer you should add also the [mac address](https://havecamerawilltravel.com/gopro/gopro-mac-address/) (in a future release this would be done automatically).
+**Important:** Rename the `Constants.h.example` to `Constants.h` and change the SSID, password and camera model
 
 ## Supported Options
 
@@ -74,6 +74,16 @@ I made the library with a style which would be quite easy to add other cameras (
 | TIMER_MODE | ✔  | ✔ |
 | PLAY_HDMI_MODE | ✔ | ✔ |
 | MULTISHOT_MODE |  | ✔ |
+| VIDEO_SUB_MODE |  | ✔ |
+| VIDEO_PHOTO_MODE |  | ✔ |
+| VIDEO_TIMELAPSE_MODE |  | ✔ |
+| VIDEO_LOOPING_MODE |  | ✔ |
+| VIDEO_TIMEWARP_MODE |  | ✔ |
+| PHOTO_SINGLE_MODE |  | ✔ |
+| PHOTO_NIGHT_MODE |  | ✔ |
+| MULTISHOT_BURST_MODE |  | ✔ |
+| MULTISHOT_TIMELAPSE_MODE |  | ✔ |
+| MULTISHOT_NIGHTLAPSE_MODE |  | ✔ |
 
 | Orientation | HERO3 | HERO4,5,6,7 |
 | --- | :---: | :---: |
@@ -157,17 +167,15 @@ I made the library with a style which would be quite easy to add other cameras (
 
 ## To Do list and known issues
 
-- Missing get status which gives info like mode (photo, video), fow and so on: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes)
-- Wait for the ESP32 core to make a stable BLE core, right now it has many issues, especially, if used together with wifi: [see here](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+ble)
-- No confirm pairing for HERO4: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing)
-- Missing some modes for HERO4 and newer camera: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#secondary-modes)
-- The arduino class String() could cause memory leaks (I never had problem yet), move to char array? 🤔
-- `BSSID()` and `macAddress()` not perfectly compatible with arduino API: [see here](https://github.com/espressif/arduino-esp32/issues/2613)
-- make gopro_mac_address field optional
-
+- ESP8266 can't get the BSSID of the camera. So if you want to turn it on you need to manually pass it to the constructor, [see the docs](https://arduino-esp8266.readthedocs.io/en/latest/esp8266wifi/station-class.html#bssid)
+- There is no way to know if an HERO3 camera is on or off so the function `isOn()` will always return `true` on this camera
+- It is possible to get a lot of info (mode, fow, battery) from HERO4 and newer camera but this is not implemented, [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO5/HERO5-Commands.md#gopro-hero5-commands-status-and-notes) - PR are welcome
+- BLE not implemented: the ESP32 core is not enough stable, especially, if used together with wifi: [see here](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+ble)
+- No confirm pairing for HERO4: [see here](https://github.com/KonradIT/goprowifihack/blob/master/HERO4/WifiCommands.md#code-pairing) - PR are welcome
+- The arduino class `String()` is known to cause memory leaks but in hours and hours of use of this library I never had a single problem
 
 ## Reference
 
-All the commands came from: https://github.com/KonradIT/goprowifihack
+All the commands came from [here](https://github.com/KonradIT/goprowifihack)
 
-The idea of making a GoPro library for arduino comes from another library https://github.com/agdl/GoPRO which works only on arduino WiFi boards and only with GoPro HERO3.
+The idea of making a GoPro library for arduino comes from another [library](https://github.com/agdl/GoPRO) which works only on arduino WiFi boards and only with GoPro HERO3
