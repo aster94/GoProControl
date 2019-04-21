@@ -37,23 +37,25 @@ enum mode
 {
     mode_first = 0,
     VIDEO_MODE,
+    VIDEO_SUB_MODE,
+    VIDEO_PHOTO_MODE,
+    VIDEO_TIMELAPSE_MODE,
+    VIDEO_LOOPING_MODE,
+    VIDEO_TIMEWARP_MODE,
+
     PHOTO_MODE,
+    PHOTO_SINGLE_MODE,
+    PHOTO_NIGHT_MODE,
+
+    MULTISHOT_MODE,
+    MULTISHOT_BURST_MODE,
+    MULTISHOT_TIMELAPSE_MODE,
+    MULTISHOT_NIGHTLAPSE_MODE,
+
     BURST_MODE,
     TIMELAPSE_MODE,
     TIMER_MODE,
     PLAY_HDMI_MODE,
-    MULTISHOT_MODE,
-    VIDEO_SUB_MODE,
-    // Secondary modes (at least tested for HERO7 with WIFI):
-    VIDEO_PHOTO_MODE,           // not for HERO6 and above
-    VIDEO_TIMELAPSE_MODE,       // HERO7
-    VIDEO_LOOPING_MODE,         // HERO7 Black
-    VIDEO_TIMEWARP_MODE,        // HERO7 Black
-    PHOTO_SINGLE_MODE,          // HERO7
-    PHOTO_NIGHT_MODE,           // HERO7 Black
-    MULTISHOT_BURST_MODE,       // HERO7
-    MULTISHOT_TIMELAPSE_MODE,   // HERO7 Black
-    MULTISHOT_NIGHTLAPSE_MODE,  // HERO7 Black
     mode_last
 };
 

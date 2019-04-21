@@ -26,8 +26,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 // include the correct wifi library
 #if defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
+#define INVERT_MAC
 #elif defined(ARDUINO_ARCH_ESP8266) // ESP8266
 #include <ESP8266WiFi.h>
+#define INVERT_MAC
 #warning "turnOn() function won't work if you don't provide the mac of your camera"
 #elif defined(ARDUINO_SAMD_MKR1000) // MKR1000
 #include <WiFi101.h>
@@ -38,15 +40,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include <WiFiNINA.h>
 #else // any board (like arduino UNO) without wifi + ESP01 with AT commands
 #include <WiFiEsp.h>
-#include <WiFiEspUdp.h>
-#define WiFiClient WiFiEspClient
-#define WiFiUDP WiFiEspUDP
 #define AT_COMMAND
 #warning "Are you using an ESP01 + AT commands? if not open an issue on github: https://github.com/aster94/GoProControl/issues"
 #endif
 
 // include the UDP library to turn on and off HERO4 and newer camera
-#if not defined(AT_COMMAND)
+#if defined(AT_COMMAND)
+#include <WiFiEspUdp.h>
+#define WiFiClient WiFiEspClient
+#define WiFiUDP WiFiEspUDP
+#else
 #include <WiFiUdp.h>
 #endif
 
@@ -56,6 +59,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #else
 #define UniversalSerial HardwareSerial
 #endif
+
+#define MAC_ADDRESS_LENGTH 6
 
 class GoProControl
 {
@@ -81,8 +86,9 @@ class GoProControl
     // Control
     uint8_t turnOn();
     uint8_t turnOff(const bool force = false);
-    uint8_t isOn();
-    uint8_t checkConnection(const bool silent = false);
+    bool isOn();
+    bool isConnected(const bool silent = true);
+    bool isRecording();
 
     // Shoot
     uint8_t shoot();
@@ -126,17 +132,21 @@ class GoProControl
     uint8_t _camera;
 
     String _request;
+    uint16_t _response;
     String _parameter;
     String _parameter2;
 
-    uint8_t *_gopro_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
-    uint8_t *_board_mac = (uint8_t *)malloc(6 * sizeof(uint8_t));
+    uint8_t _mode;
+
+    uint8_t *_gopro_mac = new uint8_t[MAC_ADDRESS_LENGTH];
+    uint8_t *_board_mac = new uint8_t[MAC_ADDRESS_LENGTH];
     String _board_name;
 
     bool WIFI_MODE = true;
     bool BLE_ENABLED = false;
 
     bool _connected = false;
+    bool _recording = false;
     uint64_t _last_request;
 
     UniversalSerial *_debug_port;
@@ -144,7 +154,7 @@ class GoProControl
 
     void sendWoL();
     uint8_t sendRequest(const String request);
-    uint8_t sendHTTPRequest(const String request);
+    uint16_t sendHTTPRequest(const String request);
 #if defined(ARDUINO_ARCH_ESP32)
     uint8_t sendBLERequest(const uint8_t request[]);
 #endif
@@ -154,6 +164,7 @@ class GoProControl
     char *splitString(char str[], uint8_t index);
     void printMacAddress(const uint8_t mac[]);
     void getBSSID();
+    void revert(uint8_t arr[]);
 };
 
 #endif //GOPRO_CONTROL_H

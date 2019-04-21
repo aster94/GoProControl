@@ -31,6 +31,11 @@ void loop()
     gp.begin();
     break;
 
+  case 'c':
+    Serial.print("Connected: ");
+    Serial.println(gp.isConnected() == true ? "Yes" : "No");
+    break;
+
   // Turn on and off
   case 'T':
     gp.turnOn();
@@ -48,6 +53,12 @@ void loop()
   // Stop the video
   case 'S':
     gp.stopShoot();
+    break;
+
+  // Check if it is recording
+  case 'r':
+    Serial.print("Recording: ");
+    Serial.println(gp.isRecording() == true ? "Yes" : "No");
     break;
 
   // Set modes
