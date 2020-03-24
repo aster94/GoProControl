@@ -19,7 +19,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define KEEP_ALIVE 1500
+#define KEEP_ALIVE 2000
 #define MAX_WAIT_TIME 2000
 
 enum camera {
@@ -87,6 +87,7 @@ enum video_resolution {
 
 enum video_fov {
   video_fov_first = video_resolution_last + 1,
+  DUAL360_FOV,
   WIDE_FOV,
   MEDIUM_FOV,
   NARROW_FOV,

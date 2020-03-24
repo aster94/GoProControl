@@ -100,7 +100,8 @@ class GoProControl {
   uint8_t turnOff(const bool force = false);
 
   // Status
-  bool status();
+  char* getStatus();
+  char* getMediaList();
   bool isOn();
   bool isConnected(const bool silent = true);
   bool isRecording();
@@ -148,7 +149,7 @@ class GoProControl {
   uint8_t _camera;
 
   String _request;
-  uint16_t _response;
+  char _response_buffer[1500];
   String _parameter;
   String _parameter2;
 
@@ -170,13 +171,14 @@ class GoProControl {
 
   void sendWoL();
   uint8_t sendRequest(const String request);
-  uint16_t sendHTTPRequest(const String request);
+  bool handleHTTPRequest(const String request);
+  bool sendHTTPRequest(const String request);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
   uint8_t connectClient();
-  uint16_t listenResponse();
-  char* splitString(char str[], uint8_t index);
+  void listenResponse();
+  uint16_t extractResponseCode();
   void printMacAddress(const uint8_t mac[]);
   void getBSSID();
   void revert(uint8_t arr[]);

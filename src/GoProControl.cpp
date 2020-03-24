@@ -20,8 +20,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <GoProControl.h>
-#define LEN(x) \
-  ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
+#define LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 ////////////////////////////////////////////////////////////
 ////////                Constructors                ////////
@@ -76,9 +75,9 @@ uint8_t GoProControl::begin() {
   while (WiFi.status() != WL_CONNECTED &&
          start_time + MAX_WAIT_TIME > millis()) {
     if (_debug) {
-      delay(100);
       _debug_port->print(".");
     }
+    delay(100);
   }
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -100,6 +99,9 @@ uint8_t GoProControl::begin() {
 
 void GoProControl::end() {
   if (_connected == false) {
+    if (_debug) {
+      _debug_port->println("Camera not connected yet");
+    }
     return;
   }
 
@@ -165,7 +167,7 @@ uint8_t GoProControl::confirmPairing() {
         _board_name;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -252,8 +254,8 @@ uint8_t GoProControl::turnOn() {
         _debug_port->println("No BSSID, unable to turn on the camera");
 #if defined(ARDUINO_ARCH_ESP8266)
         _debug_port->println(
-            "The ESP8266 can't get it, you need to pass it in the constructor, "
-            "see the README");
+            "The ESP8266 can't get the BSSID, you need to pass it in the "
+            "constructor, see the README");
 #endif
       }
       return false;
@@ -263,7 +265,7 @@ uint8_t GoProControl::turnOn() {
     }
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::turnOff(const bool force) {
@@ -293,35 +295,55 @@ uint8_t GoProControl::turnOff(const bool force) {
     _request = "/gp/gpControl/command/system/sleep";
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
 //////                     Status                     //////
 ////////////////////////////////////////////////////////////
 
-bool GoProControl::status() {
+char* GoProControl::getStatus() {
   if (_connected == false)  // not connected
   {
     if (_debug) {
       _debug_port->println("Connect the camera first");
     }
-    return false;
+    return '\0';
   }
 
   if (_camera == HERO3) {
     // this isn't supported by this camera so this function will always return
-    // true
-    return true;
+    // an empty String
+    return '\0';
   } else if (_camera >= HERO4) {
     _request = "/gp/gpControl/status";
   }
 
-  if (sendHTTPRequest(_request) == true) {
-    return true;
-  } else {
-    return false;
+  sendHTTPRequest(_request);
+  listenResponse();
+  return _response_buffer;
+}
+
+char* GoProControl::getMediaList() {
+  if (_connected == false)  // not connected
+  {
+    if (_debug) {
+      _debug_port->println("Connect the camera first");
+    }
+    return '\0';
   }
+
+  if (_camera == HERO3) {
+    // this isn't supported by this camera so this function will always return
+    // an empty String
+    return '\0';
+  } else if (_camera >= HERO4) {
+    _request = "/gp/gpMediaList";
+  }
+
+  sendHTTPRequest(_request);
+  listenResponse();
+  return _response_buffer;
 }
 
 bool GoProControl::isOn() {
@@ -387,6 +409,9 @@ uint8_t GoProControl::shoot() {
     return false;
   }
 
+  bool result = false;
+  ;
+
   if (WIFI_MODE) {
     if (_camera == HERO3) {
       _request = "/bacpac/SH?t=" + _pwd + "&p=%01";
@@ -394,11 +419,11 @@ uint8_t GoProControl::shoot() {
       _request = "/gp/gpControl/command/shutter?p=1";
     }
 
-    _response = sendHTTPRequest(_request);
+    result = handleHTTPRequest(_request);
   } else  // BLE
   {
 #if defined(ARDUINO_ARCH_ESP32)
-    _response = sendBLERequest(BLE_RecordStart);
+    result = sendBLERequest(BLE_RecordStart);
 #else
     if (_debug) {
       _debug_port->println("This shouldn't be run");
@@ -406,11 +431,10 @@ uint8_t GoProControl::shoot() {
     return -1;
 #endif
   }
-  if (_response == true && _mode >= VIDEO_MODE &&
-      _mode <= VIDEO_TIMEWARP_MODE) {
+  if (result == true && _mode >= VIDEO_MODE && _mode <= VIDEO_TIMEWARP_MODE) {
     _recording = true;
   }
-  return _response;
+  return result;
 }
 
 uint8_t GoProControl::stopShoot() {
@@ -422,6 +446,8 @@ uint8_t GoProControl::stopShoot() {
     return false;
   }
 
+  bool result = false;
+
   if (WIFI_MODE) {
     if (_camera == HERO3) {
       _request = "/bacpac/SH?t=" + _pwd + "&p=%00";
@@ -429,11 +455,11 @@ uint8_t GoProControl::stopShoot() {
       _request = "/gp/gpControl/command/shutter?p=0";
     }
 
-    _response = sendHTTPRequest(_request);
+    result = handleHTTPRequest(_request);
   } else  // BLE
   {
 #if defined(ARDUINO_ARCH_ESP32)
-    _response = sendBLERequest(BLE_RecordStop);
+    result = sendBLERequest(BLE_RecordStop);
 #else
     if (_debug) {
       _debug_port->println("This shouldn't be run");
@@ -441,10 +467,10 @@ uint8_t GoProControl::stopShoot() {
     return -1;
 #endif
   }
-  if (_response == true) {
+  if (result == true) {
     _recording = false;
   }
-  return _response;
+  return result;
 }
 
 ////////////////////////////////////////////////////////////
@@ -459,6 +485,8 @@ uint8_t GoProControl::setMode(const uint8_t option) {
     }
     return false;
   }
+
+  bool result = false;
 
   if (WIFI_MODE) {
     if (_camera == HERO3) {
@@ -559,19 +587,19 @@ uint8_t GoProControl::setMode(const uint8_t option) {
       }
     }
     _mode = option;
-    _response = sendHTTPRequest(_request);
+    result = handleHTTPRequest(_request);
   } else  // BLE
   {
 #if defined(ARDUINO_ARCH_ESP32)
     switch (option) {
       case VIDEO_MODE:
-        _response = sendBLERequest(BLE_ModeVideo);
+        result = sendBLERequest(BLE_ModeVideo);
         break;
       case PHOTO_MODE:
-        _response = sendBLERequest(BLE_ModePhoto);
+        result = sendBLERequest(BLE_ModePhoto);
         break;
       case MULTISHOT_MODE:
-        _response = sendBLERequest(BLE_ModeMultiShot);
+        result = sendBLERequest(BLE_ModeMultiShot);
         break;
       default:
         if (_debug) {
@@ -586,7 +614,7 @@ uint8_t GoProControl::setMode(const uint8_t option) {
     return -1;
 #endif
   }
-  return _response;
+  return result;
 }
 
 uint8_t GoProControl::setOrientation(const uint8_t option) {
@@ -635,7 +663,7 @@ uint8_t GoProControl::setOrientation(const uint8_t option) {
     _request = "/gp/gpControl/setting/52/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -718,7 +746,7 @@ uint8_t GoProControl::setVideoResolution(const uint8_t option) {
     _request = "/gp/gpControl/setting/2/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setVideoFov(const uint8_t option) {
@@ -747,9 +775,9 @@ uint8_t GoProControl::setVideoFov(const uint8_t option) {
         }
         return -1;
     }
-
     _request = "camera/FV?t=" + _pwd + "&p=%" + _parameter;
-  } else if (_camera >= HERO4) {
+
+  } else if (_camera >= HERO4 && _camera <= HERO7) {
     switch (option) {
       case WIDE_FOV:
         _parameter = "0";
@@ -769,11 +797,35 @@ uint8_t GoProControl::setVideoFov(const uint8_t option) {
         }
         return -1;
     }
-
     _request = "/gp/gpControl/setting/4/" + _parameter;
+
+  } else if (_camera >= HERO8) {
+    switch (option) {
+      case DUAL360_FOV:
+        _parameter = "5";
+        break;
+      case WIDE_FOV:
+        _parameter = "0";
+        break;
+      case MEDIUM_FOV:
+        _parameter = "1";
+        break;
+      case NARROW_FOV:
+        _parameter = "6";
+        break;
+      case LINEAR_FOV:
+        _parameter = "4";
+        break;
+      default:
+        if (_debug) {
+          _debug_port->println("Wrong parameter for setVideoFov");
+        }
+        return -1;
+    }
+    _request = "/gp/gpControl/setting/121/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setFrameRate(const uint8_t option) {
@@ -873,7 +925,7 @@ uint8_t GoProControl::setFrameRate(const uint8_t option) {
     _request = "/gp/gpControl/setting/3/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setVideoEncoding(const uint8_t option) {
@@ -919,7 +971,7 @@ uint8_t GoProControl::setVideoEncoding(const uint8_t option) {
     _request = "/gp/gpControl/setting/57/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -987,7 +1039,7 @@ uint8_t GoProControl::setPhotoResolution(const uint8_t option) {
     _request = "/gp/gpControl/setting/17/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setTimeLapseInterval(float option) {
@@ -1071,7 +1123,7 @@ uint8_t GoProControl::setTimeLapseInterval(float option) {
     _request = "/gp/gpControl/setting/5/" + _parameter;
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::setContinuousShot(const uint8_t option) {
@@ -1121,7 +1173,7 @@ uint8_t GoProControl::setContinuousShot(const uint8_t option) {
     }
     return false;
   }
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1143,7 +1195,7 @@ uint8_t GoProControl::localizationOn() {
     _request = "/gp/gpControl/command/system/locate?p=1";
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::localizationOff() {
@@ -1161,7 +1213,7 @@ uint8_t GoProControl::localizationOff() {
     _request = "/gp/gpControl/command/system/locate?p=0";
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::deleteLast() {
@@ -1179,7 +1231,7 @@ uint8_t GoProControl::deleteLast() {
     _request = "/gp/gpControl/command/storage/delete/last";
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 uint8_t GoProControl::deleteAll() {
@@ -1194,10 +1246,10 @@ uint8_t GoProControl::deleteAll() {
   if (_camera == HERO3) {
     _request = "camera/DA?t=" + _pwd;
   } else if (_camera >= HERO4) {
-    _request = "/gp/gpControl/command/command/storage/delete/all";
+    _request = "/gp/gpControl/command/storage/delete/all";
   }
 
-  return sendHTTPRequest(_request);
+  return handleHTTPRequest(_request);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1288,7 +1340,17 @@ uint8_t GoProControl::sendRequest(const String request) {
   return true;
 }
 
-uint16_t GoProControl::sendHTTPRequest(const String request) {
+bool GoProControl::handleHTTPRequest(const String request) {
+  if (sendHTTPRequest(request)) {
+    listenResponse();
+    if (extractResponseCode() == 200) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool GoProControl::sendHTTPRequest(const String request) {
   if (!connectClient()) {
     return false;
   }
@@ -1303,35 +1365,9 @@ uint16_t GoProControl::sendHTTPRequest(const String request) {
   } else if (_camera >= HERO4) {
     _wifi_client.println("Host: " + _host);
   }
-  _wifi_client.println("Connection: Keep-Alive");
+  _wifi_client.println("Connection: close");
   _wifi_client.println();
-
-  uint16_t response = listenResponse();
-  _wifi_client.stop();
-
-  if (response == 200) {
-    if (_debug) {
-      _debug_port->println("Command: Accepted");
-    }
-    return true;
-  } else if (response == 400) {
-    if (_debug) {
-      _debug_port->println("Command: Bad request");
-    }
-  } else if (response == 403) {
-    if (_debug) {
-      _debug_port->println("Command: Wrong password");
-    }
-  } else if (response == 410) {
-    if (_debug) {
-      _debug_port->println("Command: Failed");
-    }
-  } else {
-    if (_debug) {
-      _debug_port->println("Command: Other error");
-    }
-  }
-  return -(response);
+  return true;
 }
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -1362,75 +1398,56 @@ uint8_t GoProControl::connectClient() {
   }
 }
 
-uint16_t GoProControl::listenResponse() {
-  char incoming;
-  char first_line[20] = {'\0'};
-  bool first_line_completed = false;
-  uint8_t index = 0;
+void GoProControl::listenResponse() {
+  uint16_t index = 0;
 
   if (_debug) {
     _debug_port->print("Waiting response");
   }
-
   uint32_t start_time = millis();
-  while (_wifi_client.available() == 0 &&
-         start_time + MAX_WAIT_TIME > millis()) {
-    delay(5);
+  while ((_wifi_client.available() == 0) &&
+         (start_time + MAX_WAIT_TIME > millis())) {
     if (_debug) {
       _debug_port->print(".");
+      delay(5);
     }
   }
+  while (_wifi_client.available() > 0) {
+    _response_buffer[index++] = _wifi_client.read();
+  }
+  _response_buffer[index] = '\0';
+  _wifi_client.stop();
 
   if (_debug) {
     _debug_port->println("\nStart response body");
-  }
-
-  while (_wifi_client.available() > 0) {
-    incoming = _wifi_client.read();
-    if (first_line_completed == false) {
-      first_line[index++] = incoming;
-      if (incoming == '\n') {
-        first_line_completed = true;
-      }
-    }
-    if (_debug) {
-      _debug_port->print(incoming);
-    }
-  }
-
-  if (_debug) {
+    _debug_port->print(_response_buffer);
     _debug_port->println("\nEnd response body");
   }
+}
 
-  if (first_line[0] == '\0')  // empty response
-  {
-    if (_debug) {
-      _debug_port->println("No response");
-    }
-    return false;
-  }
-
-  uint16_t response_code = atoi(splitString(first_line, 1));
+uint16_t GoProControl::extractResponseCode() {
+  String response = String(_response_buffer);
+  uint8_t start = response.indexOf(" ");
+  uint8_t end = response.indexOf(" ", start + 1);
+  uint16_t code = response.substring(start, end).toInt();
 
   if (_debug) {
     _debug_port->print("Response code: ");
-    _debug_port->println(response_code);
-  }
-
-  return response_code;
-}
-
-char* GoProControl::splitString(char str[], uint8_t index) {
-  uint8_t counter = 0;
-  char* token = strtok(str, " ");
-  while (token != NULL) {
-    if (counter == index) {
-      return token;
+    _debug_port->println(code);
+    if (code == 200) {
+      _debug_port->println("Command: Accepted");
+    } else if (code == 400) {
+      _debug_port->println("Command: Bad request");
+    } else if (code == 403) {
+      _debug_port->println("Command: Wrong password");
+    } else if (code == 410) {
+      _debug_port->println("Command: Failed");
+    } else {
+      _debug_port->println("Command: Other error");
     }
-    token = strtok(NULL, " ");
-    counter++;
   }
-  return NULL;
+
+  return code;
 }
 
 void GoProControl::printMacAddress(const uint8_t mac[]) {
@@ -1448,13 +1465,13 @@ void GoProControl::printMacAddress(const uint8_t mac[]) {
 
 void GoProControl::getBSSID() {
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
-  // ESP32 and ESP8266 is not compliant with the arduino API
+  // ESP32 and ESP8266 aren't compliant with the arduino API
   _gopro_mac = WiFi.BSSID();
 #else
   WiFi.BSSID(_gopro_mac);
 #endif
 
-#if not defined(INVERT_MAC)  // Invert the mac in arduino boards
+#if not defined(INVERT_MAC)  // Invert the mac in some boards
   revert(_gopro_mac);
 #endif
 }

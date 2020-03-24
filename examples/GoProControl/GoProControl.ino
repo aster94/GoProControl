@@ -1,10 +1,10 @@
 #include <GoProControl.h>
-#include <Secrets.h>
+#include "Secrets.h"
 
 /*
   Control your GoPro with the Serial Monitor
   edit the file Secrets.h with your camera netword name and password
-  CAMERA could be any of HERO3, HERO4, HERO5, HERO6, HERO7, FUSION, HERO8, MAX
+  CAMERA could be: HERO3, HERO4, HERO5, HERO6, HERO7, FUSION, HERO8, MAX
 */
 
 GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA);
@@ -35,7 +35,12 @@ void loop() {
 
     case 's':
       Serial.println("Status:");
-      gp.status();
+      gp.getStatus();
+      break;
+
+    case 'm':
+      Serial.println("Media List:");
+      gp.getMediaList();
       break;
 
     // Turn on and off
