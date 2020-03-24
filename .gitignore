@@ -1,3 +1,7 @@
-.**
+.pio/**
+.vscode/**
+.travis.yml
+lib/**
+test/**
+include/**
 platformio.ini
-examples/*/Constants.h
