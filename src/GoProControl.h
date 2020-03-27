@@ -26,23 +26,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <Settings.h>
 
 // include the correct wifi library
-#if defined(ARDUINO_ARCH_ESP32)  // ESP32
+#if defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
 #define INVERT_MAC
-#elif defined(ARDUINO_ARCH_ESP8266)  // ESP8266
+#elif defined(ARDUINO_ARCH_ESP8266) // ESP8266
 #include <ESP8266WiFi.h>
 #define INVERT_MAC
 #warning \
     "turnOn() function won't work if you don't provide the mac of your camera in the constructor"
-#elif defined(ARDUINO_SAMD_MKR1000)  // MKR1000
+#elif defined(ARDUINO_SAMD_MKR1000) // MKR1000
 #include <WiFi101.h>
 #elif defined(ARDUINO_SAMD_MKRWIFI1010) || \
-    defined(ARDUINO_AVR_UNO_WIFI_REV2)  // MKR WiFi 1010 and UNO WiFi Rev.2
+    defined(ARDUINO_AVR_UNO_WIFI_REV2) // MKR WiFi 1010 and UNO WiFi Rev.2
 #include <WiFiNINA.h>
-#elif defined(ARDUINO_SAMD_MKRVIDOR4000)  // MKR VIDOR 4000
+#elif defined(ARDUINO_SAMD_MKRVIDOR4000) // MKR VIDOR 4000
 #include <VidorPeripherals.h>
 #include <WiFiNINA.h>
-#else  // any board (like arduino UNO) without wifi + ESP01 with AT commands
+#else // any board (like arduino UNO) without wifi + ESP01 with AT commands
 #include <WiFiEsp.h>
 #define AT_COMMAND
 #warning \
@@ -69,14 +69,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define MAC_ADDRESS_LENGTH 6
 
-class GoProControl {
- public:
+class GoProControl
+{
+public:
   // Constructors
-  GoProControl(const String ssid,
-               const String pwd,
+  GoProControl(const char *ssid,
+               const char *pwd,
                const uint8_t camera,
                const uint8_t gopro_mac[] = NULL,
-               const String board_name = "");
+               const char *board_name = "");
 
   // Comunication
   uint8_t begin();
@@ -100,8 +101,8 @@ class GoProControl {
   uint8_t turnOff(const bool force = false);
 
   // Status
-  char* getStatus();
-  char* getMediaList();
+  char *getStatus();
+  char *getMediaList();
   bool isOn();
   bool isConnected(const bool silent = true);
   bool isRecording();
@@ -132,56 +133,61 @@ class GoProControl {
   uint8_t deleteAll();
 
   // Debug
-  void enableDebug(UniversalSerial* debug_port,
+  void enableDebug(UniversalSerial *debug_port,
                    const uint32_t debug_baudrate = 115200);
   void disableDebug();
   void printStatus();
 
- private:
+private:
   WiFiClient _wifi_client;
   WiFiUDP _udp_client;
-  const String _host = "10.5.5.9";
+  const char *_host = "10.5.5.9";
   const uint16_t _wifi_port = 80;
   const uint8_t _udp_port = 9;
 
-  String _ssid;
-  String _pwd;
+  char *_ssid;
+  char *_pwd;
   uint8_t _camera;
 
-  String _request;
+  char *_request = new char[100];
   char _response_buffer[1500];
-  String _parameter;
-  String _parameter2;
+  char *_parameter = new char[2];
+  char *_sub_parameter = new char[2];
 
   uint8_t _mode;
 
-  uint8_t* _gopro_mac = new uint8_t[MAC_ADDRESS_LENGTH];
-  uint8_t* _board_mac = new uint8_t[MAC_ADDRESS_LENGTH];
-  String _board_name;
+  uint8_t *_gopro_mac = new uint8_t[MAC_ADDRESS_LENGTH];
+  uint8_t *_board_mac = new uint8_t[MAC_ADDRESS_LENGTH];
+  char *_board_name = new char[20];
 
   bool WIFI_MODE = true;
   bool BLE_ENABLED = false;
 
   bool _connected = false;
   bool _recording = false;
-  uint64_t _last_request;
+  uint32_t _last_request;
 
-  UniversalSerial* _debug_port;
+  UniversalSerial *_debug_port;
   bool _debug;
 
   void sendWoL();
-  uint8_t sendRequest(const String request);
-  bool handleHTTPRequest(const String request);
-  bool sendHTTPRequest(const String request);
+  uint8_t sendRequest(const char *request, bool silent = true);
+  bool handleHTTPRequest(const char *request);
+  bool sendHTTPRequest(const char *request);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
   uint8_t connectClient();
-  void listenResponse();
+  bool listenResponse();
   uint16_t extractResponseCode();
-  void printMacAddress(const uint8_t mac[]);
   void getBSSID();
+  void getWiFiData();
   void revert(uint8_t arr[]);
+  void makeRequest(char *buff,
+                   const char *a,
+                   const char *b = nullptr,
+                   const char *c = nullptr,
+                   const char *d = nullptr);
 };
 
-#endif  // GOPRO_CONTROL_H
+#endif // GOPRO_CONTROL_H

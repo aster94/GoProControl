@@ -19,10 +19,11 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define KEEP_ALIVE 2000
+#define KEEP_ALIVE 2500
 #define MAX_WAIT_TIME 2000
 
-enum camera {
+enum camera
+{
   HERO = 1,
   HERO2,
   HERO3,
@@ -35,8 +36,9 @@ enum camera {
   MAX
 };
 
-// The above settings must be between a *_first and *_last member
-enum mode {
+// The above settings must be between a "*_first" and "*_last" member
+enum mode
+{
   mode_first = 0,
   VIDEO_MODE,
   VIDEO_SUB_MODE,
@@ -61,7 +63,8 @@ enum mode {
   mode_last
 };
 
-enum orientation {
+enum orientation
+{
   orientation_first = mode_last + 1,
   ORIENTATION_UP,
   ORIENTATION_DOWN,
@@ -69,7 +72,8 @@ enum orientation {
   orientation_last
 };
 
-enum video_resolution {
+enum video_resolution
+{
   video_resolution_first = orientation_last + 1,
   VR_5p6K,
   VR_4K,
@@ -85,7 +89,8 @@ enum video_resolution {
   video_resolution_last
 };
 
-enum video_fov {
+enum video_fov
+{
   video_fov_first = video_resolution_last + 1,
   DUAL360_FOV,
   WIDE_FOV,
@@ -95,7 +100,8 @@ enum video_fov {
   video_fov_last
 };
 
-enum frame_rate {
+enum frame_rate
+{
   frame_rate_first = video_fov_last + 1,
   FR_240,
   FR_120,
@@ -114,14 +120,16 @@ enum frame_rate {
   frame_rate_last
 };
 
-enum video_encoding {
+enum video_encoding
+{
   video_encoding_first = frame_rate_last + 1,
   NTSC,
   PAL,
   video_encoding_last
 };
 
-enum photo_resolution {
+enum photo_resolution
+{
   photo_resolution_first = video_encoding_last + 1,
   PR_12MP_WIDE,
   PR_12MP_MEDIUM,
