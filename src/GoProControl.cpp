@@ -394,7 +394,7 @@ char *GoProControl::getStatus()
     {
       _debug_port->println("Connect the camera first");
     }
-    return '\0';
+    return (char *)'\0';
   }
 
   if (_camera == HERO3)
@@ -416,7 +416,7 @@ char *GoProControl::getStatus()
       return stringCut(_response_buffer, start, end);
     }
   }
-  return '\0';
+  return (char *)'\0';
 }
 
 char *GoProControl::getMediaList()
@@ -427,7 +427,7 @@ char *GoProControl::getMediaList()
     {
       _debug_port->println("Connect the camera first");
     }
-    return '\0';
+    return (char *)'\0';
   }
 
   sendHTTPRequest("/gp/gpMediaList");
@@ -440,7 +440,7 @@ char *GoProControl::getMediaList()
       return stringCut(_response_buffer, start, end);
     }
   }
-  return '\0';
+  return (char *)'\0';
 }
 
 bool GoProControl::isOn()
@@ -1768,12 +1768,12 @@ void GoProControl::getWiFiData()
 
 void GoProControl::revert(uint8_t mac[])
 {
-  uint8_t temp[MAC_ADDRESS_LENGTH];
+  uint8_t temp;
   for (uint8_t i = 0; i < MAC_ADDRESS_LENGTH / 2; i++)
   {
-    temp[i] = mac[i];
+    temp = mac[i];
     mac[i] = mac[MAC_ADDRESS_LENGTH - i - 1];
-    mac[MAC_ADDRESS_LENGTH - i - 1] = temp[i];
+    mac[MAC_ADDRESS_LENGTH - i - 1] = temp;
   }
 }
 
