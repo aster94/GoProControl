@@ -109,7 +109,7 @@ public:
   
   
   //AJOUT DAMIEN
-  void setConnection();
+  void getConnection();
   
   
   // Shoot
