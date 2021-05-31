@@ -179,11 +179,11 @@ private:
   void sendWoL();
   uint8_t sendRequest(const char *request, bool silent = true);
   bool handleHTTPRequest(const char *request);
-  bool sendHTTPRequest(const char *request, const uint16_t port = _wifi_port);
+  bool sendHTTPRequest(const char *request, const uint16_t port = 80);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
-  uint8_t connectClient(const uint16_t port = _wifi_port);
+  uint8_t connectClient(const uint16_t port = 80);
   bool listenResponse(bool mediatimer = false);
   uint16_t extractResponseCode();
   void getBSSID();
