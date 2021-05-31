@@ -106,7 +106,12 @@ public:
   bool isOn();
   bool isConnected(const bool silent = true);
   bool isRecording();
-
+  
+  
+  //AJOUT DAMIEN
+  void setConnection();
+  
+  
   // Shoot
   uint8_t shoot();
   uint8_t stopShoot();
@@ -142,7 +147,8 @@ private:
   WiFiClient _wifi_client;
   WiFiUDP _udp_client;
   const char *_host = "10.5.5.9";
-  const uint16_t _wifi_port = 80;
+  const uint16_t _wifi_port = 80; // port 80 for all requests
+  const uint16_t _wifi_port_8080 = 8080; // port 8080 in Konrad documentation for medialist
   const uint8_t _udp_port = 9;
 
   char *_ssid;
@@ -173,11 +179,14 @@ private:
   void sendWoL();
   uint8_t sendRequest(const char *request, bool silent = true);
   bool handleHTTPRequest(const char *request);
+  bool sendHTTPRequest8080(const char *request); // ADD DAMIEN
   bool sendHTTPRequest(const char *request);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
+  uint8_t connectClient8080();
   uint8_t connectClient();
+  bool listenResponse8080();
   bool listenResponse();
   uint16_t extractResponseCode();
   void getBSSID();
