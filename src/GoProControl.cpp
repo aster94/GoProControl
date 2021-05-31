@@ -431,7 +431,7 @@ char *GoProControl::getMediaList()
   }
 
   sendHTTPRequest("/gp/gpMediaList", _wifi_port_8080);
-  if (listenResponse(_wifi_port_8080))
+  if (listenResponse(true))
   {
     int16_t start = stringSearch(_response_buffer, "{\"i");
     int16_t end = stringSearch(_response_buffer, "}]}]}") + 5; // 5 is the length of the pattern
@@ -1640,7 +1640,7 @@ bool GoProControl::sendHTTPRequest8080(const char *request)
 /////////////////////////////////////
 */
 
-bool GoProControl::sendHTTPRequest(const char *request, const uint16_t port = _wifi_port)
+bool GoProControl::sendHTTPRequest(const char *request, const uint16_t port)
 {
   if (!connectClient(port))
   {
@@ -1714,7 +1714,7 @@ uint8_t GoProControl::connectClient8080()
 /////////////////////////////////
 */
 
-uint8_t GoProControl::connectClient(const uint16_t port = _wifi_port)
+uint8_t GoProControl::connectClient(const uint16_t port)
 {
   if (!_wifi_client.connect(_host, port))
   {
@@ -1782,7 +1782,7 @@ bool GoProControl::listenResponse8080()
 /////////////////////////////////
 */
 
-bool GoProControl::listenResponse(const bool mediatimer = false)
+bool GoProControl::listenResponse(bool mediatimer)
 {
   uint16_t index = 0;
 
