@@ -47,8 +47,11 @@ void loop()
     break;
 
   case 'm':
+    char* medialist;
+    medialist = gp.getMediaList();
     Serial.println("Media List:");
-    gp.getMediaList();
+    Serial.println(medialist);
+    free(medialist);
     break;
 
   // Turn on and off
