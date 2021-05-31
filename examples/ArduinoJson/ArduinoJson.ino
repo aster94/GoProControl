@@ -60,7 +60,8 @@ void compute_mediaList()
   // Print values.
   const char *id = media["id"];
   const char *folder = media["media"][0]["d"];
-  JsonObject object = media["media"][0]["fs"];
+  //JsonObject object = media["media"][0]["fs"];
+  JsonArray array = media["media"][0]["fs"];
   byte pic = object.size();
 
   Serial.print("ID: ");
