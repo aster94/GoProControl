@@ -430,8 +430,8 @@ char *GoProControl::getMediaList()
     return (char *)'\0';
   }
 
-  sendHTTPRequest("/gp/gpMediaList");
-  if (listenResponse())
+  sendHTTPRequest8080("/gp/gpMediaList");
+  if (listenResponse8080())
   {
     int16_t start = stringSearch(_response_buffer, "{\"i");
     int16_t end = stringSearch(_response_buffer, "}]}]}") + 5; // 5 is the length of the pattern
@@ -492,6 +492,30 @@ bool GoProControl::isConnected(const bool silent)
       _debug_port->println("\nNot connected");
     }
     return false;
+  }
+}
+
+  //ADD DAMIEN
+void GoProControl::setConnection()
+{
+	
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (_debug)
+    {
+      _debug_port->println("\nConnected to GoPro");
+    }
+    _connected = true;
+    getWiFiData();
+  }
+  else
+  {
+    if (_debug)
+    {
+      _debug_port->print("\nConnection failed with status: ");
+      _debug_port->println(WiFi.status());
+    }
+    _connected = false;
   }
 }
 
@@ -1579,6 +1603,41 @@ bool GoProControl::handleHTTPRequest(const char *request)
   return false;
 }
 
+////////////ADD DAMIEN////////////////
+bool GoProControl::sendHTTPRequest8080(const char *request)
+{
+  if (!connectClient8080())
+  {
+    return false;
+  }
+
+  if (_debug)
+  {
+    _debug_port->print("HTTP request: ");
+    _debug_port->println(request);
+  }
+  _wifi_client.print("GET ");
+  _wifi_client.print(request);
+  _wifi_client.println(" HTTP/1.1");
+  if (_camera == HERO3)
+  {
+    _wifi_client.print("Host: ");
+    _wifi_client.print(_host);
+    _wifi_client.print(":");
+    _wifi_client.println(_wifi_port_8080);
+  }
+  else if (_camera >= HERO4)
+  {
+    _wifi_client.print("Host: ");
+    _wifi_client.println(_host);
+  }
+  _wifi_client.println("Connection: close");
+  _wifi_client.println();
+
+  return true;
+}
+/////////////////////////////////////
+
 bool GoProControl::sendHTTPRequest(const char *request)
 {
   if (!connectClient())
@@ -1627,6 +1686,30 @@ uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 
 #endif
 
+///////////ADD DAMIEN//////////////
+uint8_t GoProControl::connectClient8080()
+{
+  if (!_wifi_client.connect(_host, _wifi_port_8080))
+  {
+    if (_debug)
+    {
+      _debug_port->println("Connection lost");
+    }
+    _connected = false;
+    return false;
+  }
+  else
+  {
+    if (_debug)
+    {
+      _debug_port->println("Client connected");
+    }
+    _last_request = millis();
+    return true;
+  }
+}
+/////////////////////////////////
+
 uint8_t GoProControl::connectClient()
 {
   if (!_wifi_client.connect(_host, _wifi_port))
@@ -1648,6 +1731,50 @@ uint8_t GoProControl::connectClient()
     return true;
   }
 }
+
+///////////ADD DAMIEN//////////////
+bool GoProControl::listenResponse8080()
+{
+  uint16_t index = 0;
+
+  if (_debug)
+  {
+    _debug_port->print("Waiting response");
+  }
+  uint32_t start_time = millis();
+  while ((_wifi_client.available() == 0) && (start_time + MAX_WAIT_TIME > millis()))
+  {
+    if (_debug)
+    {
+      _debug_port->print(".");
+      delay(5);
+    }
+  }
+  
+  delay(10); //ADD DAMIEN, WITHOUT THAT DELAY, RESPONSE CAN BE NOT COMPLETE FOR getmedia. new function created to not add the delay for other responses
+  
+  while (_wifi_client.available() > 0)
+  {
+    _response_buffer[index++] = _wifi_client.read();
+  }
+  _response_buffer[index] = '\0';
+
+  if (_debug)
+  {
+    _debug_port->println("\nStart response body");
+    _debug_port->print(_response_buffer);
+    _debug_port->println("\nEnd response body");
+  }
+  if (strcmp(_response_buffer, "") == 0)
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+/////////////////////////////////
 
 bool GoProControl::listenResponse()
 {
