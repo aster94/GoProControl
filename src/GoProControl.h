@@ -179,14 +179,11 @@ private:
   void sendWoL();
   uint8_t sendRequest(const char *request, bool silent = true);
   bool handleHTTPRequest(const char *request);
-  //bool sendHTTPRequest8080(const char *request); // ADD DAMIEN
   bool sendHTTPRequest(const char *request, const uint16_t port = _wifi_port);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
-  //uint8_t connectClient8080();
   uint8_t connectClient(const uint16_t port = _wifi_port);
-  //bool listenResponse8080();
   bool listenResponse(bool mediatimer = false);
   uint16_t extractResponseCode();
   void getBSSID();
