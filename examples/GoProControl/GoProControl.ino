@@ -50,7 +50,7 @@ void loop()
     Serial.println("Status :");
     for(int i = 0; i < 56; i++)
         {
-          //Serial.print("i = ");Serial.print(i);Serial.print("data = ");
+          // see Konrad documentation for signification of status bytes
           Serial.print(testchar[i], HEX);Serial.print(" ");
         }
     Serial.println("");
