@@ -42,8 +42,29 @@ void loop()
     break;
 
   case 's':
-    Serial.println("Status:");
-    gp.getStatus();
+    
+    // WORK FOR HERO3!  
+    char * testchar;
+    testchar = gp.getStatus();
+
+    Serial.println("Status :");
+    for(int i = 0; i < 56; i++)
+        {
+          //Serial.print("i = ");Serial.print(i);Serial.print("data = ");
+          Serial.print(testchar[i], HEX);Serial.print(" ");
+        }
+    Serial.println("");
+    Serial.println("End Status.");
+    
+      // Status can say if gopro hero3 is ON or OFF !!
+    if (testchar[0] == 0x00)
+    {
+    Serial.println("camera ON");
+    }
+    else if (testchar[0] == 0x01)
+    {
+      Serial.println("camera OFF");
+    }
     break;
 
   case 'm':
