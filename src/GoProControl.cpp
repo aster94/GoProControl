@@ -399,39 +399,36 @@ char *GoProControl::getStatus()
   if (_camera == HERO3)
   {
     makeRequest(_request, "/camera/sx?t=", _pwd);
-	sendHTTPRequest(_request);
-	
-	if (listenResponse(true)) //set the parameter to true to add a delay waiting the response
-	{
-        int16_t len = extractResponselength();
-        char *status_buffer = (char *)malloc((len * sizeof(char))+10); // Allocate memory
-        int16_t start = stringSearch(_response_buffer, "\r\n\r\n") + 4;
-        int16_t end = start + len;
-
-        for(int i = 0; i < len; i++)
-        {
-            status_buffer[i] = _response_buffer[i + start];
-        }
-
-        if (len > 0)
-        {
+    sendHTTPRequest(_request);
+    if (listenResponse(true)) //set the parameter to true to add a delay waiting the response
+    {
+      int16_t len = extractResponselength();
+      char *status_buffer = (char *)malloc((len * sizeof(char))+10); // Allocate memory
+      int16_t start = stringSearch(_response_buffer, "\r\n\r\n") + 4;
+      int16_t end = start + len;
+      for(int i = 0; i < len; i++)
+      {
+        status_buffer[i] = _response_buffer[i + start];
+      }
+      if (len > 0)
+      {
         return status_buffer;
-        }
+      }
     }
   }
   
   else if (_camera >= HERO4)
   {
     makeRequest(_request, "/gp/gpControl/status");
-  }
-  sendHTTPRequest(_request);
-  if (listenResponse())
-  {
-    int16_t start = stringSearch(_response_buffer, "{\"s");
-    int16_t end = stringSearch(_response_buffer, "}}") + 2;
-    if (start != -1 && end != -1)
+    sendHTTPRequest(_request);
+    if (listenResponse())
     {
-      return stringCut(_response_buffer, start, end);
+      int16_t start = stringSearch(_response_buffer, "{\"s");
+      int16_t end = stringSearch(_response_buffer, "}}") + 2;
+      if (start != -1 && end != -1)
+      {
+        return stringCut(_response_buffer, start, end);
+      }
     }
   }
   return (char *)'\0';
@@ -448,7 +445,7 @@ char *GoProControl::getMediaList()
     return (char *)'\0';
   }
 
-  sendHTTPRequest("/gp/gpMediaList", _wifi_port_8080);
+  sendHTTPRequest("/gp/gpMediaList", 8080);
   if (listenResponse(true))
   {
     int16_t start = stringSearch(_response_buffer, "{\"i");
@@ -1580,7 +1577,6 @@ void GoProControl::sendWoL()
 
   _udp_client.begin(_udp_port);
   _udp_client.beginPacket(addr, _udp_port);
-
   _udp_client.write(preamble, LEN(preamble));
 
   for (uint8_t i = 0; i < 16; i++)
@@ -1621,8 +1617,7 @@ bool GoProControl::handleHTTPRequest(const char *request)
   return false;
 }
 
-
-bool GoProControl::sendHTTPRequest(const char *request, uint16_t port)
+bool GoProControl::sendHTTPRequest(const char *request, const uint16_t port)
 {
   if (!connectClient(port))
   {
@@ -1670,8 +1665,7 @@ uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 
 #endif
 
-
-uint8_t GoProControl::connectClient(uint16_t port)
+uint8_t GoProControl::connectClient(const uint16_t port)
 {
   if (!_wifi_client.connect(_host, port))
   {
@@ -1693,8 +1687,7 @@ uint8_t GoProControl::connectClient(uint16_t port)
   }
 }
 
-
-bool GoProControl::listenResponse(bool mediatimer)
+bool GoProControl::listenResponse(const bool mediatimer)
 {
   uint16_t index = 0;
 
