@@ -147,8 +147,6 @@ private:
   WiFiClient _wifi_client;
   WiFiUDP _udp_client;
   const char *_host = "10.5.5.9";
-  //const uint16_t _wifi_port = 80; // not usefull anymore ?
-  //const uint16_t _wifi_port_8080 = 8080; // port 8080 in Konrad documentation for medialist
   const uint8_t _udp_port = 9;
 
   char *_ssid;
@@ -185,6 +183,7 @@ private:
 #endif
   uint8_t connectClient(const uint16_t port = 80);
   bool listenResponse(const bool mediatimer = false);
+  uint16_t extractResponselength();
   uint16_t extractResponseCode();
   void getBSSID();
   void getWiFiData();
