@@ -385,6 +385,7 @@ uint8_t GoProControl::turnOff(const bool force)
 ////////////////////////////////////////////////////////////
 //////                     Status                     //////
 ////////////////////////////////////////////////////////////
+
 char *GoProControl::getStatus()
 {
   if (_connected == false) // not connected
@@ -400,7 +401,7 @@ char *GoProControl::getStatus()
   {
     makeRequest(_request, "/camera/sx?t=", _pwd);
     sendHTTPRequest(_request);
-    if (listenResponse(true)) //set the parameter to true to add a delay waiting the response
+    if (listenResponse(true)) // set the parameter to true to add a delay waiting the response
     {
       int16_t len = extractResponselength();
       char *status_buffer = (char *)malloc((len * sizeof(char))+10); // Allocate memory
@@ -421,7 +422,7 @@ char *GoProControl::getStatus()
   {
     makeRequest(_request, "/gp/gpControl/status");
     sendHTTPRequest(_request);
-    if (listenResponse())
+    if (listenResponse(true)) // set the parameter to true to add a delay waiting the response
     {
       int16_t start = stringSearch(_response_buffer, "{\"s");
       int16_t end = stringSearch(_response_buffer, "}}") + 2;
@@ -472,7 +473,7 @@ bool GoProControl::isOn()
   if (_camera == HERO3)
   {
     // this isn't supported by this camera so this function will always return
-    // true
+    // true => with status on Hero3 we can see if camera is on with the Byte 0. if byte[0]=0 camera ON, if byte[0]=1 camera OFF
     return true;
   }
   else if (_camera >= HERO4)
@@ -510,8 +511,7 @@ bool GoProControl::isConnected(const bool silent)
   }
 }
 
-  //ADD DAMIEN
-void GoProControl::getConnection()
+void GoProControl::getConnection() // Add, test if gopro still connected without any action on camera. isConnected() need action on camera (shoot for example) to see if the camera is disconnected.
 {
 	
   if (WiFi.status() == WL_CONNECTED)
@@ -1577,6 +1577,7 @@ void GoProControl::sendWoL()
 
   _udp_client.begin(_udp_port);
   _udp_client.beginPacket(addr, _udp_port);
+
   _udp_client.write(preamble, LEN(preamble));
 
   for (uint8_t i = 0; i < 16; i++)
@@ -1704,25 +1705,38 @@ bool GoProControl::listenResponse(const bool mediatimer)
       delay(5);
     }
   }
-	
+
   if (mediatimer)
   {
-    delay(10); //ADD DAMIEN, WITHOUT THAT DELAY, RESPONSE CAN BE NOT COMPLETE FOR getmedia. new function created to not add the delay for other responses
+    delay(10); //Add delay. Without, response can be not complete for getmedia.
   }
-	
-  while (_wifi_client.available() > 0)
-  {
-    _response_buffer[index++] = _wifi_client.read();
-  }
-  _response_buffer[index] = '\0';
-  _wifi_client.stop();
 
-  if (_debug)
+  if (_wifi_client.available() < sizeof(_response_buffer)) // Add verification to not overflow the buffer
   {
-    _debug_port->println("\nStart response body");
-    _debug_port->println(_response_buffer);
-    _debug_port->println("\nEnd response body");
+    while (_wifi_client.available() > 0)
+    {
+      _response_buffer[index++] = _wifi_client.read();
+    }
+    _response_buffer[index] = '\0';
+    _wifi_client.stop();
+
+    if (_debug)
+    {
+      _debug_port->println("\nStart response body");
+      _debug_port->println(_response_buffer);
+      _debug_port->println("\nEnd response body");
+    }
   }
+
+  if (_wifi_client.available() >= sizeof(_response_buffer)) // Add debug and return empty char when message is too long and will overflow the buffer
+  {
+    _response_buffer[index] = '\0';
+    if (_debug)
+    {
+      _debug_port->println("buffer not big enough to store data");
+    }
+  }
+  
   if (strcmp(_response_buffer, "") == 0)
   {
     return false;
@@ -1746,15 +1760,15 @@ uint16_t GoProControl::extractResponselength() // for getstatus(), look the leng
 
   if (_debug)
   {
-    _debug_port->print("Response code: ");
-    _debug_port->println(code);
+    _debug_port->print("Response length: ");
+    _debug_port->print(code);
     if (code == 0)
     {
       _debug_port->println("no data received");
     }
     else if (code > 0)
     {
-      _debug_port->println("bytes received");
+      _debug_port->println(" bytes received");
     }
   }
 
