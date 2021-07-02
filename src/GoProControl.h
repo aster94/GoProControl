@@ -68,6 +68,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #define MAC_ADDRESS_LENGTH 6
+#define MAX_RESPONSE_LEN 1500
 
 class GoProControl
 {
@@ -154,7 +155,7 @@ private:
   uint8_t _camera;
 
   char *_request = new char[100];
-  char _response_buffer[1500];
+  char _response_buffer[MAX_RESPONSE_LEN];
   char *_parameter = new char[2];
   char *_sub_parameter = new char[2];
 
