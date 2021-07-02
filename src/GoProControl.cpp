@@ -1713,7 +1713,7 @@ bool GoProControl::listenResponse(const bool mediatimer)
     delay(10); //Add delay. Without, response can be not complete for getmedia.
   }
 
-  if (_wifi_client.available() < sizeof(_response_buffer)) // Add verification to not overflow the buffer
+  if (_wifi_client.available() < MAX_RESPONSE_LEN) // Add verification to not overflow the buffer
   {
     while (_wifi_client.available() > 0)
     {
