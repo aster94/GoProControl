@@ -404,7 +404,7 @@ char *GoProControl::getStatus()
     if (listenResponse(true)) // set the parameter to true to add a delay waiting the response
     {
       int16_t len = extractResponselength();
-      char *status_buffer = (char *)malloc((len * sizeof(char))+10); // Allocate memory
+      char *status_buffer = (char *)malloc((len * sizeof(char))); // Allocate memory
       int16_t start = stringSearch(_response_buffer, "\r\n\r\n") + 4;
       int16_t end = start + len;
       for(int i = 0; i < len; i++)
@@ -511,7 +511,7 @@ bool GoProControl::isConnected(const bool silent)
   }
 }
 
-void GoProControl::getConnection() // Add, test if gopro still connected without any action on camera. isConnected() need action on camera (shoot for example) to see if the camera is disconnected.
+bool GoProControl::getConnection() // Add, test if gopro still connected without any action on camera. isConnected() need action on camera (shoot for example) to see if the camera is disconnected.
 {
 	
   if (WiFi.status() == WL_CONNECTED)
@@ -522,6 +522,7 @@ void GoProControl::getConnection() // Add, test if gopro still connected without
     }
     _connected = true;
     getWiFiData();
+    return true;
   }
   else
   {
@@ -531,6 +532,7 @@ void GoProControl::getConnection() // Add, test if gopro still connected without
       _debug_port->println(WiFi.status());
     }
     _connected = false;
+    return false;
   }
 }
 
@@ -1728,7 +1730,7 @@ bool GoProControl::listenResponse(const bool mediatimer)
     }
   }
 
-  if (_wifi_client.available() >= sizeof(_response_buffer)) // Add debug and return empty char when message is too long and will overflow the buffer
+  else
   {
     _response_buffer[index] = '\0';
     if (_debug)
