@@ -7,6 +7,8 @@
   CAMERA could be: HERO3, HERO4, HERO5, HERO6, HERO7, FUSION, HERO8, MAX
 */
 
+#define CAMERA HERO3 // Change here for your camera
+
 GoProControl gp(GOPRO_SSID, GOPRO_PASS, CAMERA);
 
 void setup()
@@ -42,13 +44,40 @@ void loop()
     break;
 
   case 's':
-    Serial.println("Status:");
-    gp.getStatus();
+
+    if (CAMERA == HERO3)
+    {
+      char * statusChar;
+      statusChar = gp.getStatus();
+      Serial.println("Status :");
+      for(int i = 0; i < 56; i++)
+      {
+        Serial.print(statusChar[i], HEX);Serial.print(" ");
+      }
+      Serial.println("");
+      Serial.println("End Status.");
+      if (statusChar[0] == 0x00){Serial.println("camera ON");}
+      else{Serial.println("camera OFF");}
+      free(statusChar); // Don't forget to free memory
+    }
+
+    else
+    {
+      char * statusChar;
+      statusChar = gp.getStatus();
+      Serial.println("Status :");
+      Serial.println(statusChar);
+      free(statusChar); // Don't forget to free memory
+    }
+    
     break;
 
-  case 'm':
+  case 'm': // DO NOT USE WHEN CAMERA IS OFF, IT FREEZE ESP
+    char* medialist;
+    medialist = gp.getMediaList();
     Serial.println("Media List:");
-    gp.getMediaList();
+    Serial.println(medialist);
+    free(medialist); // Don't forget to free memory
     break;
 
   // Turn on and off

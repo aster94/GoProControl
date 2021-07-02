@@ -400,20 +400,36 @@ char *GoProControl::getStatus()
   if (_camera == HERO3)
   {
     makeRequest(_request, "/camera/sx?t=", _pwd);
+    sendHTTPRequest(_request);
+    if (listenResponse(true)) // set the parameter to true to add a delay waiting the response
+    {
+      int16_t len = extractResponselength();
+      char *status_buffer = (char *)malloc((len * sizeof(char))); // Allocate memory
+      int16_t start = stringSearch(_response_buffer, "\r\n\r\n") + 4;
+      int16_t end = start + len;
+      for(int i = 0; i < len; i++)
+      {
+        status_buffer[i] = _response_buffer[i + start];
+      }
+      if (len > 0)
+      {
+        return status_buffer;
+      }
+    }
   }
+  
   else if (_camera >= HERO4)
   {
     makeRequest(_request, "/gp/gpControl/status");
-  }
-
-  sendHTTPRequest(_request);
-  if (listenResponse())
-  {
-    int16_t start = stringSearch(_response_buffer, "{\"s");
-    int16_t end = stringSearch(_response_buffer, "}}") + 2;
-    if (start != -1 && end != -1)
+    sendHTTPRequest(_request);
+    if (listenResponse(true)) // set the parameter to true to add a delay waiting the response
     {
-      return stringCut(_response_buffer, start, end);
+      int16_t start = stringSearch(_response_buffer, "{\"s");
+      int16_t end = stringSearch(_response_buffer, "}}") + 2;
+      if (start != -1 && end != -1)
+      {
+        return stringCut(_response_buffer, start, end);
+      }
     }
   }
   return (char *)'\0';
@@ -430,8 +446,8 @@ char *GoProControl::getMediaList()
     return (char *)'\0';
   }
 
-  sendHTTPRequest("/gp/gpMediaList");
-  if (listenResponse())
+  sendHTTPRequest("/gp/gpMediaList", 8080);
+  if (listenResponse(true))
   {
     int16_t start = stringSearch(_response_buffer, "{\"i");
     int16_t end = stringSearch(_response_buffer, "}]}]}") + 5; // 5 is the length of the pattern
@@ -457,7 +473,7 @@ bool GoProControl::isOn()
   if (_camera == HERO3)
   {
     // this isn't supported by this camera so this function will always return
-    // true
+    // true => with status on Hero3 we can see if camera is on with the Byte 0. if byte[0]=0 camera ON, if byte[0]=1 camera OFF
     return true;
   }
   else if (_camera >= HERO4)
@@ -491,6 +507,31 @@ bool GoProControl::isConnected(const bool silent)
     {
       _debug_port->println("\nNot connected");
     }
+    return false;
+  }
+}
+
+bool GoProControl::getConnection() // Add, test if gopro still connected without any action on camera. isConnected() need action on camera (shoot for example) to see if the camera is disconnected.
+{
+	
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (_debug)
+    {
+      _debug_port->println("\nConnected to GoPro");
+    }
+    _connected = true;
+    getWiFiData();
+    return true;
+  }
+  else
+  {
+    if (_debug)
+    {
+      _debug_port->print("\nConnection failed with status: ");
+      _debug_port->println(WiFi.status());
+    }
+    _connected = false;
     return false;
   }
 }
@@ -1579,9 +1620,9 @@ bool GoProControl::handleHTTPRequest(const char *request)
   return false;
 }
 
-bool GoProControl::sendHTTPRequest(const char *request)
+bool GoProControl::sendHTTPRequest(const char *request, const uint16_t port)
 {
-  if (!connectClient())
+  if (!connectClient(port))
   {
     return false;
   }
@@ -1599,7 +1640,7 @@ bool GoProControl::sendHTTPRequest(const char *request)
     _wifi_client.print("Host: ");
     _wifi_client.print(_host);
     _wifi_client.print(":");
-    _wifi_client.println(_wifi_port);
+    _wifi_client.println(port);
   }
   else if (_camera >= HERO4)
   {
@@ -1627,9 +1668,9 @@ uint8_t GoProControl::sendBLERequest(const uint8_t request[])
 
 #endif
 
-uint8_t GoProControl::connectClient()
+uint8_t GoProControl::connectClient(const uint16_t port)
 {
-  if (!_wifi_client.connect(_host, _wifi_port))
+  if (!_wifi_client.connect(_host, port))
   {
     if (_debug)
     {
@@ -1649,7 +1690,7 @@ uint8_t GoProControl::connectClient()
   }
 }
 
-bool GoProControl::listenResponse()
+bool GoProControl::listenResponse(const bool mediatimer)
 {
   uint16_t index = 0;
 
@@ -1666,19 +1707,38 @@ bool GoProControl::listenResponse()
       delay(5);
     }
   }
-  while (_wifi_client.available() > 0)
-  {
-    _response_buffer[index++] = _wifi_client.read();
-  }
-  _response_buffer[index] = '\0';
-  _wifi_client.stop();
 
-  if (_debug)
+  if (mediatimer)
   {
-    _debug_port->println("\nStart response body");
-    _debug_port->print(_response_buffer);
-    _debug_port->println("\nEnd response body");
+    delay(10); //Add delay. Without, response can be not complete for getmedia.
   }
+
+  if (_wifi_client.available() < MAX_RESPONSE_LEN) // Add verification to not overflow the buffer
+  {
+    while (_wifi_client.available() > 0)
+    {
+      _response_buffer[index++] = _wifi_client.read();
+    }
+    _response_buffer[index] = '\0';
+    _wifi_client.stop();
+
+    if (_debug)
+    {
+      _debug_port->println("\nStart response body");
+      _debug_port->println(_response_buffer);
+      _debug_port->println("\nEnd response body");
+    }
+  }
+
+  else
+  {
+    _response_buffer[index] = '\0';
+    if (_debug)
+    {
+      _debug_port->println("buffer not big enough to store data");
+    }
+  }
+  
   if (strcmp(_response_buffer, "") == 0)
   {
     return false;
@@ -1687,6 +1747,34 @@ bool GoProControl::listenResponse()
   {
     return true;
   }
+}
+
+uint16_t GoProControl::extractResponselength() // for getstatus(), look the length of the response
+{
+  if (strcmp(_response_buffer, "") == 0)
+  {
+    return false;
+  }
+
+  int16_t start = stringSearch(_response_buffer, "Content-Length: ") + 16;
+  int16_t end = stringSearch(_response_buffer, "\r\n",start);
+  uint16_t code = atoi(stringCut(_response_buffer, start, end));
+
+  if (_debug)
+  {
+    _debug_port->print("Response length: ");
+    _debug_port->print(code);
+    if (code == 0)
+    {
+      _debug_port->println("no data received");
+    }
+    else if (code > 0)
+    {
+      _debug_port->println(" bytes received");
+    }
+  }
+
+  return code;
 }
 
 uint16_t GoProControl::extractResponseCode()

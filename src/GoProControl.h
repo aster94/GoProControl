@@ -68,6 +68,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #define MAC_ADDRESS_LENGTH 6
+#define MAX_RESPONSE_LEN 1500
 
 class GoProControl
 {
@@ -106,7 +107,12 @@ public:
   bool isOn();
   bool isConnected(const bool silent = true);
   bool isRecording();
-
+  
+  
+  //ADD DAMIEN
+  bool getConnection();
+  
+  
   // Shoot
   uint8_t shoot();
   uint8_t stopShoot();
@@ -142,7 +148,6 @@ private:
   WiFiClient _wifi_client;
   WiFiUDP _udp_client;
   const char *_host = "10.5.5.9";
-  const uint16_t _wifi_port = 80;
   const uint8_t _udp_port = 9;
 
   char *_ssid;
@@ -150,7 +155,7 @@ private:
   uint8_t _camera;
 
   char *_request = new char[100];
-  char _response_buffer[1500];
+  char _response_buffer[MAX_RESPONSE_LEN];
   char *_parameter = new char[2];
   char *_sub_parameter = new char[2];
 
@@ -173,12 +178,13 @@ private:
   void sendWoL();
   uint8_t sendRequest(const char *request, bool silent = true);
   bool handleHTTPRequest(const char *request);
-  bool sendHTTPRequest(const char *request);
+  bool sendHTTPRequest(const char *request, const uint16_t port = 80);
 #if defined(ARDUINO_ARCH_ESP32)
   uint8_t sendBLERequest(const uint8_t request[]);
 #endif
-  uint8_t connectClient();
-  bool listenResponse();
+  uint8_t connectClient(const uint16_t port = 80);
+  bool listenResponse(const bool mediatimer = false);
+  uint16_t extractResponselength();
   uint16_t extractResponseCode();
   void getBSSID();
   void getWiFiData();
