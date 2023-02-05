@@ -1,4 +1,4 @@
-# GoPro Control Arduino
+# GoPro Control for Arduino
 
 This is a library to interface with GoPro cameras over WiFi using Arduino!
 
@@ -6,9 +6,17 @@ This is a library to interface with GoPro cameras over WiFi using Arduino!
 
 ![Alt text](/extras/gopros_and_esps.jpg?raw=true "GoPro4")
 
-Here there is a short video that shows the potential of the library
+Here there is a short video that shows the potential of the library (click below to play)
 
 [![Alt text](https://img.youtube.com/vi/PuM-ZQ2tMW0/0.jpg)](https://www.youtube.com/watch?v=PuM-ZQ2tMW0)
+
+## Projects
+
+Check out these nice projects:
+- [RTLapseCAM](http://www.plastibots.com/index.php/2021/12/25/rtlapsecam-resin-printer-time-lapse-with-m5stick-c-plus-gopro/)
+- [RTLapseCAM V2](http://www.plastibots.com/index.php/2022/02/02/rtlapsecam-resin-printer-time-lapse-with-m5stick-c-plus-gopro-2/)
+
+If you want to show your project make a pull request
 
 ## Supported actions
 
@@ -33,6 +41,7 @@ Here there is a short video that shows the potential of the library
 - MKR WiFi 1010
 - MKR VIDOR 4000
 - UNO WiFi Rev.2
+- Raspberry Pi Boards
 - any other boards (UNO, NANO, bluepill) attached to an ESP01 using AT commands with [this library](https://github.com/bportaluri/WiFiEsp)
 
 ## Supported cameras:
@@ -56,6 +65,8 @@ I made the library with a style which would be quite easy to add other cameras (
 - PlatformIO:
 	- From command line: run `pio lib install "GoProControl"` or use the ID `pio lib install 5599`
 	- Or if you prefer a GUI from [Platformio IDE](https://docs.platformio.org/en/latest/librarymanager/)
+- Raspberry Pi:
+	- Follow this: https://github.com/earlephilhower/arduino-pico
 - Manually:
 	- `cd $HOME/Arduino/libraries` ([see Arduino library paths for other operating systems](https://www.arduino.cc/en/hacking/libraries))
 	- `git clone https://github.com/aster94/GoProControl.git`
@@ -70,6 +81,8 @@ If you wish to control two (or more) camera at the same time check [`MultiCam.in
 On the ESP32 there is the possibility to use the dual core architecture with the FreeRTOS framework, check [`ESP32_FreeRTOS.ino`](examples/ESP32_FreeRTOS/ESP32_FreeRTOS.ino)
 
 An advantage use of the `getStatus()` and `getMediaList()` can be seen in [`ArduinoJson.ino`](examples/ArduinoJson/ArduinoJson.ino), you would need to download the `ArduinoJson` library
+
+To improve the connection stability is very important to always close the connection with `end()`
 
 **Important:** Before uploading to your board you have to change the SSID, password and camera model from `Secrets.h`
 
@@ -96,3 +109,7 @@ In the file [Settings.h](src/Settings.h) you can see how them are defined
 All the commands came from the great work of [KonradIT](https://github.com/KonradIT/goprowifihack)
 
 The idea of making a GoPro library for arduino comes from another [library](https://github.com/agdl/GoPRO) which works only on arduino WiFi boards and only with GoPro HERO3
+
+## Donate
+
+If you liked the library and wish to donate you can sent to [PayPal](paypal.me/aster94)

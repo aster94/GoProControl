@@ -29,6 +29,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #if defined(ARDUINO_ARCH_ESP32) // ESP32
 #include <WiFi.h>
 #define INVERT_MAC
+#elif defined(ARDUINO_ARCH_MBED_RP2040) || defined(ARDUINO_ARCH_RP2040) // Raspberry Pi
+#include <WiFi.h>
+#define INVERT_MAC
 #elif defined(ARDUINO_ARCH_ESP8266) // ESP8266
 #include <ESP8266WiFi.h>
 #define INVERT_MAC
