@@ -112,4 +112,4 @@ The idea of making a GoPro library for arduino comes from another [library](http
 
 ## Donate
 
-If you liked the library and wish to donate you can sent to [PayPal](paypal.me/aster94)
+If you liked the library and wish to donate you can sent to [PayPal](https://paypal.me/aster94)
