@@ -109,7 +109,3 @@ In the file [Settings.h](src/Settings.h) you can see how them are defined
 All the commands came from the great work of [KonradIT](https://github.com/KonradIT/goprowifihack)
 
 The idea of making a GoPro library for arduino comes from another [library](https://github.com/agdl/GoPRO) which works only on arduino WiFi boards and only with GoPro HERO3
-
-## Donate
-
-If you liked the library and wish to donate you can sent to [PayPal](https://paypal.me/aster94)
